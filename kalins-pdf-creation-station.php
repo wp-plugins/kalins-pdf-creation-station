@@ -2,7 +2,7 @@
 /*
 Plugin Name: Kalin's PDF Creation Station
 Version: 0.7
-Plugin URI: http://kalinbooks.com/kalins-pdf-creation-station/
+Plugin URI: http://kalinbooks.com/pdf-creation-station/
 Description: Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 Author: Kalin Ringkvist
 Author URI: http://kalinbooks.com/
