@@ -3,14 +3,14 @@ Contributors: kalinbooks
 Donate link: http://kalinbooks.com/pdf-creation-station/
 Tags: PDF, document, export, print, pdf, creation
 Requires at least: 3.0
-Tested up to: 3.0
+Tested up to: 3.0.1
 Stable tag: 0.7
 
 Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post. Beta release. Please let me know if you find bugs.
 
 == Description ==
 <p>
-Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post. Beta release. Please let me know if you find bugs.                   
+Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post. Beta release. Please let me know if you find bugs.                  
 </p>
 <p>
 Kalin's PDF Creation Station will add two menus to your WordPress admin. One under tools and one under settings. 
@@ -57,7 +57,7 @@ Make sure to use double quotes instead of single quotes when inserting arbitrary
 = 0.7 =
 First version. Beta. Use with Caution.
 
-== Arbitrary section ==
+== About ==
 
 If you find this plugin useful please pay it forward to the community, or visit http://kalinbooks.com/ and check out some of my science fiction or political writings.
 Thanks to Marcos Rezende's Blog as PDF and Aleksander Stacherski's AS-PDF plugins which provided a good starting point.
