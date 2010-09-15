@@ -1,7 +1,7 @@
 === Kalin's PDF Creation Station ===
 Contributors: kalinbooks
 Donate link: http://kalinbooks.com/pdf-creation-station/
-Tags: PDF, document, export, print
+Tags: PDF, document, export, print, pdf, creation
 Requires at least: 3.0
 Tested up to: 3.0
 Stable tag: 0.7
@@ -32,7 +32,7 @@ Plugin by Kalin Ringkvist at http://kalinbooks.com/
 
 = Where do I find instructions and help? =
 
-In both the settings and tool pages you can find help in the built-in wordpress help dropdown menu in the upper right side of the screen. If you continue to have problems, feel free to make a comment at http://kalinbooks.com/kalins-pdf-creation-station/. Try to include as much specific information as you can, especially if you think you've found a bug.
+In both the settings and tool pages you can find help in the built-in wordpress help dropdown menu in the upper right side of the screen. If you continue to have problems, feel free to make a comment at http://kalinbooks.com/pdf-creation-station/. Try to include as much specific information as you can, especially if you think you've found a bug.
 
 = Font, href or align tags don't work in inserted HTML. =
 
