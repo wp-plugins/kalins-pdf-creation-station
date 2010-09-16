@@ -40,7 +40,7 @@
                 Reset all your form values back to the originals that shipped with the plugin. This will not change or delete any existing PDF files.
                 </li>
                 <li><b>create now!:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
-                This link is a hacky workaround for a bug that someone reported where the normal Create PDF! button was not properly showing the popup menu. Don't use this unless the Create PDF! button fails. This link will skip the popup and page-ordering and will simply create the PDF immediately. If you need this workaround, please help me out by posting your experience at <a href="http://kalinbooks.com/pdf-creation-station/known-bugs/">kalinbooks.com/pdf-creation-station/known-bugs/</a>
+                This link is a hacky workaround for a bug that someone reported where the normal Create PDF! button was not properly showing the popup menu. Don't use this unless the Create PDF! button fails. This link will skip the popup and page-ordering and will simply create the PDF immediately. If you need this workaround, please help me out by posting your experience at <a href="http://kalinbooks.com/pdf-creation-station/known-bugs/">kalinbooks.com/pdf-creation-station/known-bugs/</a> because I'd like to find a way to reproduce this bug.
                 </li>
             </ol>
             
@@ -52,9 +52,6 @@
            <b>Note:</b> these shortcodes are not entered into the main WordPress shortcode system, so they will only work within the PDF Creation Station plugin.
         </li>
         <br/>
-        <li>
-        	<b>Notes about Caching:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
-        	To minimize server CPU usage, PDF files are cached within the plugin directory. When a user clicks on a link to a PDF file, the script will first check if the file exists, and if so, it will redirect the user. If there is no file, a brand new PDF will be generated. This means the first person to click the link will experience a slightly longer delay. Individual cached PDF files will be automatically deleted whenever a page or post is updated, ensuring that the files are always up-to-date. All the cached files will be deleted whenever you update or reset the settings on this page.
-        </li>
+        
     </ul>
 </p>
