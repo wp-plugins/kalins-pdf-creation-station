@@ -39,6 +39,9 @@
                 <li><b>Reset Defaults:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
                 Reset all your form values back to the originals that shipped with the plugin. This will not change or delete any existing PDF files.
                 </li>
+                <li><b>create now!:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
+                This link is a hacky workaround for a bug that someone reported where the normal Create PDF! button was not properly showing the popup menu. Don't use this unless the Create PDF! button fails. This link will skip the popup and page-ordering and will simply create the PDF immediately. If you need this workaround, please help me out by posting your experience at <a href="http://kalinbooks.com/pdf-creation-station/known-bugs/">kalinbooks.com/pdf-creation-station/known-bugs/</a>
+                </li>
             </ol>
             
         </li>

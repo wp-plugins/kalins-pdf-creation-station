@@ -38,8 +38,8 @@ jQuery(document).ready(function($){
 	var pageList = <?php echo json_encode($pageList);?>;
 	var postList = <?php echo json_encode($postList); ?>;
 	var createNonce = '<?php echo $create_nonce; //pass a different nonce security string for each possible ajax action?>'
-	var deleteNonce = '<?php echo $delete_nonce; ?>'
-	var resetNonce = '<?php echo $reset_nonce; ?>'
+	var deleteNonce = '<?php echo $delete_nonce; ?>';
+	var resetNonce = '<?php echo $reset_nonce; ?>';
 	//var indexToDelete = null;
 	//alert("document ready" + pageList + "a nd " + pdfList);
 	function buildFileTable(){//build the file table - we build it all in javascript so we can simply rebuild it whenever an entry is added through ajax
@@ -56,7 +56,7 @@ jQuery(document).ready(function($){
 			
 		var l = pdfList.length;
 		for(var i=0; i<l; i++){
-			var fileLink = tc("<a href='<?php echo WP_PLUGIN_URL; ?>/kalins-pdf-creation-station/pdf/" + pdfList[i].fileName + "' target='_blank'>" + pdfList[i].fileName + "</a>")
+			var fileLink = tc("<a href='<?php echo WP_PLUGIN_URL; ?>/kalins-pdf-creation-station/pdf/" + pdfList[i].fileName + "' target='_blank'>" + pdfList[i].fileName + "</a>");
 			tableHTML += "<tr>" + tc(i) + fileLink + tc(pdfList[i].date) + tc("<button name='btnDelete_" + i + "' id='btnDelete_" + i + "'>Delete</button>") + "</tr>";
 		}
 	
@@ -124,43 +124,60 @@ jQuery(document).ready(function($){
 	}
 	
 	
-	$('#btnCreate').click(function(){
-								   
+	$('#btnCreate').click(function() {
 		$('#sortDialog').dialog('close');
 								   
 		var sortString = $("#sortable").sortable('toArray').join(",");
-		//var sortArr = $("#sortable").sortable('serialize');
-
-		//alert(sortString);
 		
-		//return;
+		createDocument(sortString);
+	});
+	
+	$('#createNow').click(function() {
+		
+		//var sortString = 
 		
 		
-		/*var pageIDList = "";
+		//alert("strting" + pageList);
+		
+		
+		var sortString = '';
+		var pageCount = 0;
 		var l = pageList.length;		   
 		for(var i=0; i<l; i++){
 			if($('#chk' + pageList[i]['ID']).is(':checked')){
-				pageIDList += "," + pageList[i].ID;
+				//pageIDList += "," + pageList[i].ID;
+				sortString += 'pg_' + pageList[i]['ID'] + ",";
+				pageCount++;
 			}
 		}
+		//alert("hullo" + pageList);
 
-		var postIDList = "";
 		var l = postList.length;		   
 		for(var i=0; i<l; i++){
 			if($('#chk' + postList[i]['ID']).is(':checked')){
-				postIDList += "," + postList[i].ID;
+				sortString += 'po_' + postList[i]['ID'] + ",";
+				pageCount++;
 			}
 		}
 		
-		if(pageIDList == "" && postIDList == ""){
-			$('#createStatus').html("Error: you must select at least one page or post.");
+		if(pageCount == 0){
+			$('#createStatus').html("Error: you must select at least one page or post to create a PDF.");
 			return;
 		}
+		//alert("before substr");
 		
-		pageIDList = pageIDList.substr(1);//strip off first |
-		postIDList = postIDList.substr(1);//strip off first |
-		*/
+		sortString = sortString.substr(0, sortString.length - 1);
 		
+		//alert("creating doc " + sortString);
+		
+		
+		createDocument(sortString);
+	
+	});
+	
+	function createDocument(sortString){
+		
+		alert("creating doc " + sortString);
 		var data = { action: 'kalins_pdf_tool_create',
 			pageIDs : sortString,
 			_ajax_nonce : createNonce
@@ -205,7 +222,7 @@ jQuery(document).ready(function($){
 			
 			//$('#createStatus').html(response);
 		});
-	});
+	}
 	
 	$('#btnReset').click(function(){
 		if(confirm("Are you sure you want to reset all of your field values? You will lose all the information you have entered into the form. (This will NOT delete or change your existing PDF documents.)")){
@@ -394,7 +411,7 @@ jQuery(document).ready(function($){
         File name: <input type="text" name='txtFileName' id='txtFileName' value='<?php echo $adminOptions["filename"]; ?>' ></input>.pdf
         </p>
         <p align="center"><br />
-        <button id="btnOpenDialog">Create PDF!</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type='button' id='btnReset'>Reset Defaults</button></p>
+        <button id="btnOpenDialog">Create PDF!</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type='button' id='btnReset'>Reset Defaults</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a name="createNow" id="createNow" href="javascript:void(0);" title="Use this if the 'Create PDF!' button won't properly show the popup. You won't be able to re-order your pages, but at least you can create a document.">create now!</a></p>
         <p align="center"><span id="createStatus">&nbsp;</span></p>
     </div>
     

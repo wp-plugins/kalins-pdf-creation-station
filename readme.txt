@@ -6,8 +6,7 @@ Requires at least: 3.0
 Tested up to: 3.0.1
 Stable tag: 0.7
 
-Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post. Beta release. Please let me know if you find bugs.
-
+Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 == Description ==
 <p>
 Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post. Beta release. Please let me know if you find bugs.                  
