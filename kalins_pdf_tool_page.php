@@ -177,7 +177,7 @@ jQuery(document).ready(function($){
 	
 	function createDocument(sortString){
 		
-		alert("creating doc " + sortString);
+		//alert("creating doc " + sortString);
 		var data = { action: 'kalins_pdf_tool_create',
 			pageIDs : sortString,
 			_ajax_nonce : createNonce
