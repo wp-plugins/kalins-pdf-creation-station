@@ -51,10 +51,16 @@ Make sure to use double quotes instead of single quotes when inserting arbitrary
 = 0.7 =
 * First version. Beta. Includes basic functionality for tool menu and settings menu including page order, title page, include images, font size, ajaxified interface, shortcodes, etc.
 
+= 0.8 =
+Added a link to create the PDF immediately on the tool page for anyone who might have trouble with the page-order popup.
+
 == Upgrade Notice ==
 
 = 0.7 =
 First version. Beta. Use with Caution.
+
+= 0.8 =
+No point in upgrading unless you have trouble with the page-order popup when hitting the Create PDF! button.
 
 == About ==
 
