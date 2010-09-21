@@ -1,5 +1,10 @@
 <?php
 	
+	if ( !function_exists( 'add_action' ) ) {
+		echo "Hi there!  I'm just a plugin, not much I can do when called directly.";
+		exit;
+	}
+	
 	$create_nonce = wp_create_nonce( 'kalins_pdf_tool_create' );
 	$delete_nonce = wp_create_nonce( 'kalins_pdf_tool_delete' );
 	$reset_nonce = wp_create_nonce( 'kalins_pdf_tool_reset' );
@@ -462,7 +467,7 @@ jQuery(document).ready(function($){
 			echo "<p>You are running PHP version "  .phpversion() .". This plugin was built with PHP version 5.2.11 and has NOT been tested with older versions. It likely requires at least PHP version 5.0.</p>";
 		}
 		?>
-    	<p>PDF Creation Station was built with WordPress version 2.9.2. It has NOT been tested on older versions and will most likely fail.</p>
+    	<p>PDF Creation Station was built with WordPress version 3.0. It has NOT been tested on older versions and will most likely fail.</p>
     </div>
     
     <div id="sortDialog" title="Adjust Order and Create"><div id="sortHolder" class="sortHolder"></div><p align="center"><br /><button id="btnCreateCancel">Cancel</button>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button id="btnCreate">Create PDF!</button></p></div>

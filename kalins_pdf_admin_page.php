@@ -1,4 +1,9 @@
 <?php
+
+	if ( !function_exists( 'add_action' ) ) {
+		echo "Hi there!  I'm just a plugin, not much I can do when called directly.";
+		exit;
+	}
 	
 	$save_nonce = wp_create_nonce( 'kalins_pdf_admin_save' );
 	$reset_nonce = wp_create_nonce( 'kalins_pdf_admin_reset' );

@@ -1,5 +1,6 @@
 <?php
 
+
 $outputVar = new stdClass();
 
 $isSingle = isset($_GET["singlepost"]);
@@ -7,8 +8,6 @@ $isSingle = isset($_GET["singlepost"]);
 try{
 	if($isSingle){//guess I don't know enough about PHP to understand why this page thinks its in a different location in relation to wp-config depending on how its called... but somehow always knows how to get tcpdf
 		require_once("../../../wp-config.php");
-	}else{
-		require_once("../wp-config.php");
 	}
 	
 	require_once('tcpdf/config/lang/eng.php');
@@ -27,6 +26,8 @@ try{
 	return;
 }
 */
+
+$adminOptions = kalins_pdf_get_admin_options();
 
 if($isSingle){
 	$singleID = substr($_GET["singlepost"], 3);

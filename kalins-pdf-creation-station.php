@@ -29,6 +29,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+if ( !function_exists( 'add_action' ) ) {
+	echo "Hi there!  I'm just a plugin, not much I can do when called directly.";
+	exit;
+}
+
 define("KALINS_PDF_ADMIN_OPTIONS_NAME", "kalins_pdf_admin_options");
 define("KALINS_PDF_TOOL_OPTIONS_NAME", "kalins_pdf_tool_options");
 
@@ -42,6 +47,28 @@ function kalins_pdf_tool_page() {//load php that builds our tool page
 }
 
 function kalins_pdf_admin_init(){
+	
+	//echo "pdf_admin_init";
+	
+	//creation tool ajax connections
+	add_action('wp_ajax_kalins_pdf_tool_create', 'kalins_pdf_tool_create');
+	add_action('wp_ajax_kalins_pdf_tool_delete', 'kalins_pdf_tool_delete');
+	add_action('wp_ajax_kalins_pdf_tool_defaults', 'kalins_pdf_tool_defaults');
+	
+	
+	//single page admin ajax connections
+	add_action('wp_ajax_kalins_pdf_reset_admin_defaults', 'kalins_pdf_reset_admin_defaults');//kalins_pdf_admin_save
+	add_action('wp_ajax_kalins_pdf_admin_save', 'kalins_pdf_admin_save');
+	
+	
+	
+	add_action('save_post', 'kalinsPDF_save_postdata');
+	add_action('contextual_help', 'kalins_pdf_contextual_help', 10, 2);
+	register_deactivation_hook( __FILE__, 'kalins_pdf_cleanup' );
+	
+	
+	
+	
 	wp_register_style('kalinPDFStyle', WP_PLUGIN_URL . '/kalins-pdf-creation-station/kalins_pdf_styles.css');
 	
 	add_meta_box( 'kalinsPDF_sectionid', __( "PDF Creation Station", 'kalinsPDF_textdomain' ), 'kalinsPDF_inner_custom_box', 'post', 'side' );
@@ -49,6 +76,7 @@ function kalins_pdf_admin_init(){
 }
 
 function kalins_pdf_configure_pages() {
+	
 	$mypage = add_submenu_page('options-general.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalins_pdf_admin_page');
 	
 	$mytool = add_submenu_page('tools.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalins_pdf_tool_page');
@@ -58,9 +86,11 @@ function kalins_pdf_configure_pages() {
 	
 	add_action( "admin_print_scripts-$mytool", 'kalins_pdf_admin_head' );
 	add_action('admin_print_styles-' . $mytool, 'kalins_pdf_admin_styles');
+	
 }
 
 function kalins_pdf_admin_head() {
+	//echo "My plugin admin head";
 	wp_enqueue_script("jquery");
 	wp_enqueue_script("jquery-ui-sortable");
 	wp_enqueue_script("jquery-ui-dialog");
@@ -137,6 +167,8 @@ function kalinsPDF_save_postdata( $post_id ) {
 	$meta->showLink = $_POST['kalinsPDFLink'];
 	
 	update_post_meta($post_id, 'kalinsPDFMeta', json_encode($meta));
+	
+	//echo "updating post meta";
 }
 
 function kalinsPDF_content_filter($content){
@@ -357,6 +389,11 @@ function kalins_pdf_getAdminSettings(){//simply returns all our default option v
 	$kalinsPDFAdminOptions['beforeLink'] = '<br/><p align="right">-- ';
 	$kalinsPDFAdminOptions['afterLink'] = " --</p><br/>";
 	
+	//If I understand correctly, I shouldn't require_once wp-config.php in kalins_pdf_create.pdf (the ajax call). That's 'lazy programming' and causes issues in cases where wp-config.php is in a non-standard location.
+	//Not sure if this is the proper solution, but I'm simply including the needed blog info in the admin options here so I don't need to import wp-config.php in the ajax call.
+	$kalinsPDFAdminOptions['wp_plugin_dir'] = WP_PLUGIN_DIR;//I don't think these options actually get entered into the database.
+	$kalinsPDFAdminOptions['wpurl'] = get_bloginfo('wpurl');
+	
 	return $kalinsPDFAdminOptions;
 }
 
@@ -377,6 +414,9 @@ function kalins_pdf_getDefaultOptions(){//simply returns all our default option 
 }
 
 function kalins_pdf_cleanup() {//deactivation hook. Clear all traces of PDF Creation Station
+
+	//echo "pdf cleanup routine";
+
 	delete_option(KALINS_PDF_ADMIN_OPTIONS_NAME);//remove all options for both tool and admin
 	delete_option(KALINS_PDF_TOOL_OPTIONS_NAME);
 	
@@ -393,6 +433,9 @@ function kalins_pdf_cleanup() {//deactivation hook. Clear all traces of PDF Crea
 
 function kalins_pdf_init(){
 	//setup internationalization here
+	
+	//echo "kalins_pdf_init";
+	
 }
 
 //----------------begin utility functions-----------------------
@@ -427,20 +470,27 @@ function kalins_pdf_global_shortcode_replace($str){//replace global shortcodes
 //wp actions to get everything started
 add_action('admin_init', 'kalins_pdf_admin_init');
 add_action('admin_menu', 'kalins_pdf_configure_pages');
-add_action( 'init', 'kalins_pdf_init' );
+//add_action( 'init', 'kalins_pdf_init' );
 
+/*
 //creation tool ajax connections
 add_action('wp_ajax_kalins_pdf_tool_create', 'kalins_pdf_tool_create');
 add_action('wp_ajax_kalins_pdf_tool_delete', 'kalins_pdf_tool_delete');
 add_action('wp_ajax_kalins_pdf_tool_defaults', 'kalins_pdf_tool_defaults');
 
+
 //single page admin ajax connections
 add_action('wp_ajax_kalins_pdf_reset_admin_defaults', 'kalins_pdf_reset_admin_defaults');//kalins_pdf_admin_save
 add_action('wp_ajax_kalins_pdf_admin_save', 'kalins_pdf_admin_save');
 
+*/
+
 //hooks
-add_action('save_post', 'kalinsPDF_save_postdata');
+//add_action('save_post', 'kalinsPDF_save_postdata');
 add_filter("the_content", "kalinsPDF_content_filter" );
-add_action('contextual_help', 'kalins_pdf_contextual_help', 10, 2);
-register_deactivation_hook( __FILE__, 'kalins_pdf_cleanup' );
+//add_action('contextual_help', 'kalins_pdf_contextual_help', 10, 2);
+//register_deactivation_hook( __FILE__, 'kalins_pdf_cleanup' );
+
+
+//echo "creation station!!!!";
 ?>

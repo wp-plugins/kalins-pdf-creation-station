@@ -22,12 +22,18 @@ In the settings menu you will be able to setup options for a link that can be au
 <p>
 Plugin by Kalin Ringkvist at http://kalinbooks.com/
 </p>
+<p>
+Plugin URL: http://kalinbooks.com/pdf-creation-station/ (bug/feature lists etc)
+</p>
+
 
 == Installation ==
 
 1. Unzip `kalins-pdf-creation-station.zip` to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 1. Find the PDF Creation Station menu under 'tools' and begin creating custom PDF documents of your website. Or go into the PDF Creaction Station menu under 'settings' and begin setting up the options for automatic individual page generation.
+
+Note: requires PHP 5.2
 
 == Frequently Asked Questions ==
 
@@ -51,16 +57,10 @@ Make sure to use double quotes instead of single quotes when inserting arbitrary
 = 0.7 =
 * First version. Beta. Includes basic functionality for tool menu and settings menu including page order, title page, include images, font size, ajaxified interface, shortcodes, etc.
 
-= 0.8 =
-Added a link to create the PDF immediately on the tool page for anyone who might have trouble with the page-order popup.
-
 == Upgrade Notice ==
 
 = 0.7 =
 First version. Beta. Use with Caution.
-
-= 0.8 =
-No point in upgrading unless you have trouble with the page-order popup when hitting the Create PDF! button.
 
 == About ==
 
