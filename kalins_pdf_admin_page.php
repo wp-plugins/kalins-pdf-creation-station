@@ -10,31 +10,6 @@
 	
 	$adminOptions = kalins_pdf_get_admin_options();
 	
-	/*
-	$pageList = get_pages();
-	$postList = get_posts('numberposts=-1');
-
-	$pdfList = array();
-	$count = 0;
-	
-	$uploads = wp_upload_dir();
-	//$pdfDir = $uploads['basedir'].'/kalin-pdf/';
-	$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/';
-	//if ($handle = opendir(get_bloginfo('wpurl') .'/wp-content/plugins/kalins-pdf-creation-station/pdf/')) {//open pdf directory//get_bloginfo('wpurl') .'/wp-content/plugins/kalins-pdf-creation-station/pdf/'
-	if ($handle = opendir($pdfDir)) {
-
-		while (false !== ($file = readdir($handle))) {
-			if ($file != "." && $file != ".." && substr($file, stripos($file, ".")+1, 3) == "pdf") {//loop to find all relevant files 
-				$fileObj = new stdClass();
-				$fileObj->fileName = $file;
-				$fileObj->date = date("Y-m-d H:i:s", filemtime($pdfDir .$file));
-				$pdfList[$count] = $fileObj;//compile array of file information simply to pass to javascript
-				$count++;
-			}
-		}
-		closedir($handle);
-	}
-	*/
 ?>
 
 
@@ -53,7 +28,6 @@ jQuery(document).ready(function($){
 			jQuery.post(ajaxurl, data, function(response) {
 				
 				var newValues = JSON.parse(response.substr(0, response.lastIndexOf("}") + 1));
-				//alert("fields cleared" + response + " and " + newValues["showLink"]);
 				
 				$('#txtBeforePage').val(newValues["beforePage"]);
 				$('#txtBeforePost').val(newValues["beforePost"]);
@@ -71,6 +45,7 @@ jQuery(document).ready(function($){
 				
 				$('#txtFontSize').val(newValues["fontSize"]);
 				$('#txtFilename').val(newValues["filename"]);
+				$('#txtCharCount').val(newValues["charCount"]);
 				
 				if(newValues["includeImages"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
 					$('#chkIncludeImages').attr('checked', true);
@@ -81,24 +56,11 @@ jQuery(document).ready(function($){
 				$("input[name='kalinsPDFLink']").val(newValues["showLink"]);//set link radio button option
 				$("#opt_" + newValues["showLink"]).attr("checked", "checked"); 
 				
-				
-				
-				/*
-				switch(newValues["showLink"]){
-					case "top":
-						$("input[@name='kalinsPDFLink']").val("both");
-						break;
-					case "bottom":
-						$("input[@name='kalinsPDFLink']").val("both");
-						break;
-					case "none":
-						$("input[@name='kalinsPDFLink']").val("both");
-						break;
-				
+				if(newValues["doCleanup"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkDoCleanup').attr('checked', true);
+				}else{
+					$('#chkDoCleanup').attr('checked', false);
 				}
-				*/
-				
-				
 			});
 		}
 	});
@@ -121,21 +83,16 @@ jQuery(document).ready(function($){
 		data.beforeLink = $("#txtBeforeLink").val();
 		data.afterLink = $("#txtAfterLink").val();
 		data.fontSize = $("#txtFontSize").val();
-		
 		data.includeImages = $("#chkIncludeImages").is(':checked');
 		//data.includeTables = $("#chkIncludeTables").is(':checked');
-		
 		data.showLink = $("input[name='kalinsPDFLink']:checked").val();
+		data.charCount = $("#txtCharCount").val();
+		data.doCleanup =  $("#chkDoCleanup").is(':checked');
 		
 		$('#createStatus').html("Saving settings...");
-		
-		//alert(data.includeImages);
 
 		// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
 		jQuery.post(ajaxurl, data, function(response) {
-			//alert('Got this from the server: ' + response);
-			
-			
 			var startPosition = response.indexOf("{");
 			var responseObjString = response.substr(startPosition, response.lastIndexOf("}") - startPosition + 1);
 			
@@ -230,7 +187,9 @@ jQuery(document).ready(function($){
 				break;
 		}
 		?>
-        
+        <p>
+        <input type="text" id="txtCharCount" size="3" maxlength="5" value='<?php echo $adminOptions["charCount"]; ?>' /> Minimum post character count
+        </p>
         <p><!--&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkIncludeTables' name='chkIncludeTables' if($adminOptions["includeTables"] == 'true'){echo "checked='yes' ";} ></input> Include Tables --></p>
         
 </p>
@@ -241,7 +200,6 @@ jQuery(document).ready(function($){
     
     <div class='collapse'><b>Shortcodes</b></div>
     <div class="generalHolder">
-    <!-- "[ID]", "[post_author]", "[post_date]", "[post_date_gmt]", "[post_title]", "[post_excerpt]", "[post_name]", "[post_modified]", "[post_modified_gmt]", "[guid]", "[comment_count]", "[blog_name]", "[blog_description]", "[blog_url]" -->
     	<b>Blog shortcodes:</b> Use these codes anywhere in the above form to insert information about your blog.
     	<p><ul>
         <li><b>[current_time]</b> -  PDF creation date/time</li>
@@ -278,5 +236,6 @@ jQuery(document).ready(function($){
 		}
 		?>
     	<p>PDF Creation Station was built with WordPress version 3.0. It has NOT been tested on older versions and will most likely fail.</p>
+        <p><input type='checkbox' id='chkDoCleanup' name='chkDoCleanup' <?php if($adminOptions["doCleanup"] == "true"){echo "checked='yes' ";} ?>></input> Upon plugin deactivation clean up all database entries</p>
     </div>
 </html>

@@ -4,7 +4,7 @@ Donate link: http://kalinbooks.com/pdf-creation-station/
 Tags: PDF, document, export, print, pdf, creation
 Requires at least: 3.0
 Tested up to: 3.0.1
-Stable tag: 0.7
+Stable tag: 0.9
 
 Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 == Description ==
@@ -23,7 +23,13 @@ In the settings menu you will be able to setup options for a link that can be au
 Plugin by Kalin Ringkvist at http://kalinbooks.com/
 </p>
 <p>
-Plugin URL: http://kalinbooks.com/pdf-creation-station/ (bug/feature lists etc)
+Plugin URL: http://kalinbooks.com/pdf-creation-station/
+</p>
+<p>
+Bugs: http://kalinbooks.com/pdf-creation-station/known-bugs/ If you have any problems please comment on this page or email Kalin at kalin@kalinflash.com and I'll do my best to figure out your issues.
+</p>
+<p>
+Future features: http://kalinbooks.com/pdf-creation-station/pdf-creation-possible-features/ If you have feature requests or are interested in my plans for PDF Creation Station
 </p>
 
 
@@ -31,7 +37,7 @@ Plugin URL: http://kalinbooks.com/pdf-creation-station/ (bug/feature lists etc)
 
 1. Unzip `kalins-pdf-creation-station.zip` to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
-1. Find the PDF Creation Station menu under 'tools' and begin creating custom PDF documents of your website. Or go into the PDF Creaction Station menu under 'settings' and begin setting up the options for automatic individual page generation.
+3. Find the PDF Creation Station menu under 'tools' and begin creating custom PDF documents of your website. Or go into the PDF Creaction Station menu under 'settings' and begin setting up the options for automatic individual page generation.
 
 Note: requires PHP 5.2
 
@@ -45,6 +51,10 @@ In both the settings and tool pages you can find help in the built-in wordpress 
 
 Make sure to use double quotes instead of single quotes when inserting arbitrary HTML attributes because of a bug with the core PDF creation engine (TCPDF).
 
+= what if my wp-config.php is in a non-standard location? =
+
+I need to write a blog post about this, but I have a solution that requires changing one line of code in the plugin. Contact me for details.
+
 == Screenshots ==
 
 1. A portion of the creator tool that creates custom PDF documents for large portions of your website.
@@ -57,10 +67,27 @@ Make sure to use double quotes instead of single quotes when inserting arbitrary
 = 0.7 =
 * First version. Beta. Includes basic functionality for tool menu and settings menu including page order, title page, include images, font size, ajaxified interface, shortcodes, etc.
 
+= 0.8 =
+* Added a create now button for someone who had trouble getting the jquery page-ordering popup to work.
+
+= 0.9 =
+*Moved some initialization functions into kalins_pdf_init() so that they are only run in the admin.
+*Added new security check to make sure the plugin pages are only being run from within wordpress.
+*Added 'default' option to page/post edit box so you aren't forced to make a permanent choice when saving a page/post.
+*Added checkbox at the bottom of settings page to turn off the plugin's deactivation routine.
+*changed default link placement to 'none' so that links are not added to pages/posts until the user authorizes it
+
+
 == Upgrade Notice ==
 
 = 0.7 =
 First version. Beta. Use with Caution.
+
+= 0.8 =
+No point in upgrading unless you have problems with the Create PDF! button
+
+= 0.9 =
+Slight overall blog performance increase. Minor security improvement. New 'Use default' option on page/post edit screen. New feature: disable database cleanup upon plugin deactivation
 
 == About ==
 

@@ -45,8 +45,7 @@ jQuery(document).ready(function($){
 	var createNonce = '<?php echo $create_nonce; //pass a different nonce security string for each possible ajax action?>'
 	var deleteNonce = '<?php echo $delete_nonce; ?>';
 	var resetNonce = '<?php echo $reset_nonce; ?>';
-	//var indexToDelete = null;
-	//alert("document ready" + pageList + "a nd " + pdfList);
+	
 	function buildFileTable(){//build the file table - we build it all in javascript so we can simply rebuild it whenever an entry is added through ajax
 		if(pdfList.length == 0){
 			$('#pdfListDiv').html("You do not have any custom PDF files.");
@@ -139,12 +138,6 @@ jQuery(document).ready(function($){
 	
 	$('#createNow').click(function() {
 		
-		//var sortString = 
-		
-		
-		//alert("strting" + pageList);
-		
-		
 		var sortString = '';
 		var pageCount = 0;
 		var l = pageList.length;		   
@@ -155,7 +148,6 @@ jQuery(document).ready(function($){
 				pageCount++;
 			}
 		}
-		//alert("hullo" + pageList);
 
 		var l = postList.length;		   
 		for(var i=0; i<l; i++){
@@ -169,12 +161,8 @@ jQuery(document).ready(function($){
 			$('#createStatus').html("Error: you must select at least one page or post to create a PDF.");
 			return;
 		}
-		//alert("before substr");
 		
 		sortString = sortString.substr(0, sortString.length - 1);
-		
-		//alert("creating doc " + sortString);
-		
 		
 		createDocument(sortString);
 	
@@ -182,7 +170,6 @@ jQuery(document).ready(function($){
 	
 	function createDocument(sortString){
 		
-		//alert("creating doc " + sortString);
 		var data = { action: 'kalins_pdf_tool_create',
 			pageIDs : sortString,
 			_ajax_nonce : createNonce
@@ -194,7 +181,6 @@ jQuery(document).ready(function($){
 		data.afterPage = $("#txtAfterPage").val();
 		data.afterPost = $("#txtAfterPost").val();
 		data.fileNameCont = $("#txtFileName").val();
-		//alert($("#chkIncludeImages").is(':checked'));
 		data.includeImages = $("#chkIncludeImages").is(':checked');
 		//data.includeTables = $("#chkIncludeTables").is(':checked');
 		data.headerTitle = $("#txtHeaderTitle").val();
@@ -203,12 +189,9 @@ jQuery(document).ready(function($){
 		data.fontSize = $("#txtFontSize").val();
 		
 		$('#createStatus').html("Building PDF file. Wait time will depend on the length of the document, image complexity and current server load. Refreshing the page or navigating away will cancel the build.");
-		
-		//alert(data.includeImages + "incl");
 
 		// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
 		jQuery.post(ajaxurl, data, function(response) {
-			
 			
 			var startPosition = response.indexOf("{")
 			var responseObjString = response.substr(startPosition, response.lastIndexOf("}") - startPosition + 1);
@@ -220,12 +203,9 @@ jQuery(document).ready(function($){
 				buildFileTable();
 			}else{
 				
-				//$('#createStatus').html("Error: " + newFileData.status);
-				$('#createStatus').html(response);
+				$('#createStatus').html("Error: " + newFileData.status);
+				//$('#createStatus').html(response);
 			}
-			
-			
-			//$('#createStatus').html(response);
 		});
 	}
 	
@@ -234,10 +214,7 @@ jQuery(document).ready(function($){
 			var data = { action: 'kalins_pdf_tool_defaults', _ajax_nonce : resetNonce};
 			
 			jQuery.post(ajaxurl, data, function(response) {
-				//alert(response);
 				var newValues = JSON.parse(response.substr(0, response.lastIndexOf("}") + 1));
-				//alert("fields cleared" + response + "======" + newValues["fontSize"]);
-				
 				$('#txtBeforePage').val(newValues["beforePage"]);
 				$('#txtBeforePost').val(newValues["beforePost"]);
 				$('#txtAfterPage').val(newValues["afterPage"]);
@@ -288,7 +265,6 @@ jQuery(document).ready(function($){
 			var l = pageList.length;		   
 			for(var i=0; i<l; i++){
 				if($('#chk' + pageList[i]['ID']).is(':checked')){
-					//pageIDList += "," + pageList[i].ID;
 					sortHTML += '<li class="ui-state-default" id="pg_' + pageList[i]['ID'] + '"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' + pageList[i].post_title + '</li>';
 					pageCount++;
 				}
@@ -425,7 +401,6 @@ jQuery(document).ready(function($){
     
     <div class='collapse'><b>Shortcodes</b></div>
     <div class="generalHolder">
-    <!-- "[ID]", "[post_author]", "[post_date]", "[post_date_gmt]", "[post_title]", "[post_excerpt]", "[post_name]", "[post_modified]", "[post_modified_gmt]", "[guid]", "[comment_count]", "[blog_name]", "[blog_description]", "[blog_url]" -->
     	<b>Blog shortcodes:</b> Use these codes anywhere in the above form to insert information about your blog.
     	<p><ul>
         <li><b>[current_time]</b> -  PDF creation date/time</li>

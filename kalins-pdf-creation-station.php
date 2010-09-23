@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Kalin's PDF Creation Station
-Version: 0.8
+Version: 0.9
 Plugin URI: http://kalinbooks.com/pdf-creation-station/
 Description: Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 Author: Kalin Ringkvist
@@ -60,19 +60,20 @@ function kalins_pdf_admin_init(){
 	add_action('wp_ajax_kalins_pdf_reset_admin_defaults', 'kalins_pdf_reset_admin_defaults');//kalins_pdf_admin_save
 	add_action('wp_ajax_kalins_pdf_admin_save', 'kalins_pdf_admin_save');
 	
-	
-	
-	add_action('save_post', 'kalinsPDF_save_postdata');
 	add_action('contextual_help', 'kalins_pdf_contextual_help', 10, 2);
+	
 	register_deactivation_hook( __FILE__, 'kalins_pdf_cleanup' );
-	
-	
-	
 	
 	wp_register_style('kalinPDFStyle', WP_PLUGIN_URL . '/kalins-pdf-creation-station/kalins_pdf_styles.css');
 	
+	
+	//--------------you may remove these three lines (comment them out) if you are using hard-coded PDF links in your theme. This will make your admin panels run slightly more efficiently.--------------
+	add_action('save_post', 'kalinsPDF_save_postdata');
 	add_meta_box( 'kalinsPDF_sectionid', __( "PDF Creation Station", 'kalinsPDF_textdomain' ), 'kalinsPDF_inner_custom_box', 'post', 'side' );
     add_meta_box( 'kalinsPDF_sectionid', __( "PDF Creation Station", 'kalinsPDF_textdomain' ), 'kalinsPDF_inner_custom_box', 'page', 'side' );
+	//--------------------------------
+	
+	
 }
 
 function kalins_pdf_configure_pages() {
@@ -109,19 +110,23 @@ function kalinsPDF_inner_custom_box($post) {//creates the box that goes on the p
 	if($meta){//if that meta exists, set $showLink
 		$showLink = $meta->showLink;
 	}else{//if there is no meta for this page/post yet, grab the default
-		$adminOptions = kalins_pdf_get_admin_options();
-		$showLink = $adminOptions['showLink'];
+		//$adminOptions = kalins_pdf_get_admin_options();
+		//$showLink = $adminOptions['showLink'];
+		$showLink = "default";
 	}
 	
 	switch($showLink){//KLUDGE - show radio buttons depending on which one is selected (there should be an easier way than repeating all that HTML - I mean, what if I had like 15 different options?)
 		case "top":
-			echo '<p><input type="radio" name="kalinsPDFLink" value="top" id="opt_top" checked /> Link at top of page<br /><input type="radio" name="kalinsPDFLink" value="bottom" id="opt_bottom" /> Link at bottom of page<br /><input type="radio" name="kalinsPDFLink" value="none" id="opt_none" /> Do not generate PDF</p>';
+			echo '<p><input type="radio" name="kalinsPDFLink" value="top" id="opt_top" checked /> Link at top of page<br /><input type="radio" name="kalinsPDFLink" value="bottom" id="opt_bottom" /> Link at bottom of page<br /><input type="radio" name="kalinsPDFLink" value="none" id="opt_none" /> Do not generate PDF<br /><input type="radio" name="kalinsPDFLink" value="default" id="opt_default" /> Use default</p>';
 			break;
 		case "bottom":
-			echo '<p><input type="radio" name="kalinsPDFLink" value="top" id="opt_top" /> Link at top of page<br /><input type="radio" name="kalinsPDFLink" value="bottom" id="opt_bottom" checked /> Link at bottom of page<br /><input type="radio" name="kalinsPDFLink" value="none" id="opt_none" /> Do not generate PDF</p>';
+			echo '<p><input type="radio" name="kalinsPDFLink" value="top" id="opt_top" /> Link at top of page<br /><input type="radio" name="kalinsPDFLink" value="bottom" id="opt_bottom" checked /> Link at bottom of page<br /><input type="radio" name="kalinsPDFLink" value="none" id="opt_none" /> Do not generate PDF<br /><input type="radio" name="kalinsPDFLink" value="default" id="opt_default" /> Use default</p>';
 			break;
 		case "none":
-			echo '<p><input type="radio" name="kalinsPDFLink" value="top" id="opt_top" /> Link at top of page<br /><input type="radio" name="kalinsPDFLink" value="bottom" id="opt_bottom" /> Link at bottom of page<br /><input type="radio" name="kalinsPDFLink" value="none" id="opt_none" checked /> Do not generate PDF</p>';
+			echo '<p><input type="radio" name="kalinsPDFLink" value="top" id="opt_top" /> Link at top of page<br /><input type="radio" name="kalinsPDFLink" value="bottom" id="opt_bottom" /> Link at bottom of page<br /><input type="radio" name="kalinsPDFLink" value="none" id="opt_none" checked /> Do not generate PDF<br /><input type="radio" name="kalinsPDFLink" value="default" id="opt_default" /> Use default</p>';
+			break;
+		case "default":
+			echo '<p><input type="radio" name="kalinsPDFLink" value="top" id="opt_top" /> Link at top of page<br /><input type="radio" name="kalinsPDFLink" value="bottom" id="opt_bottom" /> Link at bottom of page<br /><input type="radio" name="kalinsPDFLink" value="none" id="opt_none" /> Do not generate PDF<br /><input type="radio" name="kalinsPDFLink" value="default" id="opt_default" checked /> Use default</p>';
 			break;
 	}
 }
@@ -177,24 +182,21 @@ function kalinsPDF_content_filter($content){
 	}
 	
 	global $wp_query;
-	
 	$post = $wp_query->post;
-	
 	$meta = json_decode(get_post_meta($post->ID, "kalinsPDFMeta", true));
-	
 	$adminOptions = kalins_pdf_get_admin_options();
-	
-	//$showLink = null;
 	
 	if($meta){
 		$showLink = $meta->showLink;
-	}else{
-		$showLink = $adminOptions['showLink'];
 	}
 	
-	/*if(!$showLink){
-		$showLink = $adminOptions['showLink'];
-	}*/
+	if(!$meta || $showLink == "default"){
+		if(strlen($content) > $adminOptions['charCount']){//if this post is longer than the minimum character count
+			$showLink = $adminOptions['showLink'];
+		}else{
+			return $content;//if it's not long enough, just quit
+		}
+	}
 	
 	if($showLink == "none"){//if we don't want a link or if we're not on a single page/post we don't need to do anything else
 		return $content;
@@ -274,10 +276,14 @@ function kalins_pdf_admin_save(){
 	$kalinsPDFAdminOptions['afterLink'] = stripslashes($_POST['afterLink']);
 	
 	$kalinsPDFAdminOptions["fontSize"] = (int) $_POST['fontSize'];
+	$kalinsPDFAdminOptions['charCount'] = (int) stripslashes($_POST['charCount']);
 	
 	$kalinsPDFAdminOptions['showLink'] = stripslashes($_POST['showLink']);
 	$kalinsPDFAdminOptions["includeImages"] = stripslashes($_POST['includeImages']);
 	//$kalinsPDFAdminOptions["includeTables"] = stripslashes($_POST['includeTables']);
+	
+	$kalinsPDFAdminOptions["doCleanup"] = stripslashes($_POST['doCleanup']);
+	
 	
 	update_option(KALINS_PDF_ADMIN_OPTIONS_NAME, $kalinsPDFAdminOptions);//save options to database
 	
@@ -384,15 +390,12 @@ function kalins_pdf_getAdminSettings(){//simply returns all our default option v
 	$kalinsPDFAdminOptions['titlePage'] = '';
 	$kalinsPDFAdminOptions['finalPage'] = '';
 	$kalinsPDFAdminOptions['fontSize'] = 10;
-	$kalinsPDFAdminOptions['showLink'] = "top";
+	$kalinsPDFAdminOptions['showLink'] = "none";
 	$kalinsPDFAdminOptions['linkText'] = "Download [post_title] as PDF";
 	$kalinsPDFAdminOptions['beforeLink'] = '<br/><p align="right">-- ';
 	$kalinsPDFAdminOptions['afterLink'] = " --</p><br/>";
-	
-	//If I understand correctly, I shouldn't require_once wp-config.php in kalins_pdf_create.pdf (the ajax call). That's 'lazy programming' and causes issues in cases where wp-config.php is in a non-standard location.
-	//Not sure if this is the proper solution, but I'm simply including the needed blog info in the admin options here so I don't need to import wp-config.php in the ajax call.
-	$kalinsPDFAdminOptions['wp_plugin_dir'] = WP_PLUGIN_DIR;//I don't think these options actually get entered into the database.
-	$kalinsPDFAdminOptions['wpurl'] = get_bloginfo('wpurl');
+	$kalinsPDFAdminOptions['doCleanup'] = "true";
+	$kalinsPDFAdminOptions['charCount'] = 1000;
 	
 	return $kalinsPDFAdminOptions;
 }
@@ -414,28 +417,28 @@ function kalins_pdf_getDefaultOptions(){//simply returns all our default option 
 }
 
 function kalins_pdf_cleanup() {//deactivation hook. Clear all traces of PDF Creation Station
-
-	//echo "pdf cleanup routine";
-
-	delete_option(KALINS_PDF_ADMIN_OPTIONS_NAME);//remove all options for both tool and admin
-	delete_option(KALINS_PDF_TOOL_OPTIONS_NAME);
 	
-	$allposts = get_posts();//first get and delete all post meta data
-	foreach( $allposts as $postinfo) {
-		delete_post_meta($postinfo->ID, 'kalinsPDFMeta');
-	}
-	
-	$allposts = get_pages();//then get and delete all page meta data
-	foreach( $allposts as $postinfo) {
-		delete_post_meta($postinfo->ID, 'kalinsPDFMeta');
+	$adminOptions = kalins_pdf_get_admin_options();
+	if($adminOptions['doCleanup'] == 'true'){//if user set cleanup to true, remove all options and post meta data
+		
+		delete_option(KALINS_PDF_TOOL_OPTIONS_NAME);
+		delete_option(KALINS_PDF_ADMIN_OPTIONS_NAME);//remove all options for admin
+		
+		$allposts = get_posts();//first get and delete all post meta data
+		foreach( $allposts as $postinfo) {
+			delete_post_meta($postinfo->ID, 'kalinsPDFMeta');
+		}
+		
+		$allposts = get_pages();//then get and delete all page meta data
+		foreach( $allposts as $postinfo) {
+			delete_post_meta($postinfo->ID, 'kalinsPDFMeta');
+		}
 	}
 } 
 
 function kalins_pdf_init(){
 	//setup internationalization here
-	
-	//echo "kalins_pdf_init";
-	
+	//this doesn't actually run and perhaps there's another better place to do internationalization
 }
 
 //----------------begin utility functions-----------------------
@@ -470,27 +473,10 @@ function kalins_pdf_global_shortcode_replace($str){//replace global shortcodes
 //wp actions to get everything started
 add_action('admin_init', 'kalins_pdf_admin_init');
 add_action('admin_menu', 'kalins_pdf_configure_pages');
-//add_action( 'init', 'kalins_pdf_init' );
-
-/*
-//creation tool ajax connections
-add_action('wp_ajax_kalins_pdf_tool_create', 'kalins_pdf_tool_create');
-add_action('wp_ajax_kalins_pdf_tool_delete', 'kalins_pdf_tool_delete');
-add_action('wp_ajax_kalins_pdf_tool_defaults', 'kalins_pdf_tool_defaults');
+//add_action( 'init', 'kalins_pdf_init' );//just keep this for whenever we do internationalization - if the function is actually needed, that is.
 
 
-//single page admin ajax connections
-add_action('wp_ajax_kalins_pdf_reset_admin_defaults', 'kalins_pdf_reset_admin_defaults');//kalins_pdf_admin_save
-add_action('wp_ajax_kalins_pdf_admin_save', 'kalins_pdf_admin_save');
-
-*/
-
-//hooks
-//add_action('save_post', 'kalinsPDF_save_postdata');
+//content filter is called whenever a blog page is displayed. Comment this out if you aren't using links applied directly to individual posts, or if the link is set in your theme
 add_filter("the_content", "kalinsPDF_content_filter" );
-//add_action('contextual_help', 'kalins_pdf_contextual_help', 10, 2);
-//register_deactivation_hook( __FILE__, 'kalins_pdf_cleanup' );
 
-
-//echo "creation station!!!!";
 ?>

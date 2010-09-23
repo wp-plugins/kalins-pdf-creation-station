@@ -32,6 +32,9 @@
                 <li><b>Default Link Placement:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
                 Choose where on the blog page you would like the PDF link displayed: top, bottom, or not at all. This setting can be overridden on the individual page/post edit pages, allowing you to create PDF files for some pages and not for others. For pages/posts saved before the installation of PDF Creation Station, the links will be displayed according to the default you set here.
                 </li>
+                <li><b>Minimum Post Character Count</b><br />&nbsp;&nbsp;&nbsp;&nbsp;
+                Set the minimum number of characters a page/post can have before it receives a PDF link. Note: This feature is not perfect. For the sake of efficiency, the script does not discriminate between HTML and actual text, so a YouTube video, for example, may count as several hundred characters. Settings on the individual page/post edit screen will override this value if it becomes an issue on certain pages.
+                </li>
                 <li><b>Save Settings:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
                 Remember to click this button to save all your settings.
                 </li>
@@ -40,13 +43,27 @@
                 </li>
             </ol>
             
-        </li>
+      </li>
         <br/>
         <li>
         	<b>Shortcodes:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
            Shortcodes are snippets of text starting with "[" and ending with "]" that will be automatically replaced with the appropriate information. You may insert these codes into any fields on this page to be replaced with information like blog name, post title, author, date, etc.<br/>&nbsp;&nbsp;&nbsp;&nbsp;
            <b>Note:</b> these shortcodes are not entered into the main WordPress shortcode system, so they will only work within the PDF Creation Station plugin.
         </li>
+        
+        <br/>
+        <li>
+        <b>Clean up Database entries</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
+        At the bottom of this page is a little checkbox labeled "Upon plugin deactivation clean up all database entries." This applies to this page, the tool page and the page/post meta. Un-check this only if you plan on deactivating this plugin and want to be able to turn it back on later without all the settings reverting to their defaults.
+        </li>
+        
+        <br/>
+        <li>
+        <b>Hard-code link into theme</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
+        If you would like to add the PDF link directly into your theme, follow the instructions in <a href="http://kalinbooks.com/pdf-creation-station-hard-code-link/">this blog post.</a> This will give you more flexibility on where in the page to display the link and will also use fewer server resources. Requires some HTML knowledge (naturally you need to be able to understand your theme) and requires one very minor change to a plugin file.
+        </li>
+        
+        
         <br/>
         <li>
         	<b>Notes about Caching:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
