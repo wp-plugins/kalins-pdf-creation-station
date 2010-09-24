@@ -434,7 +434,7 @@ function kalins_pdf_cleanup() {//deactivation hook. Clear all traces of PDF Crea
 			delete_post_meta($postinfo->ID, 'kalinsPDFMeta');
 		}
 	}
-} 
+}
 
 function kalins_pdf_init(){
 	//setup internationalization here

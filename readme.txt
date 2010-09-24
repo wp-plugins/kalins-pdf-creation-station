@@ -8,8 +8,12 @@ Stable tag: 0.9
 
 Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 == Description ==
+
 <p>
 Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post. Beta release. Please let me know if you find bugs.                  
+</p>
+<p>
+WARNING: Don't upgrade until you copy and save your current PDF files to a location outside of the plugin folder. I just discovered a bug where they disappear upon upgrading the plugin. Will try and fix by the next version.
 </p>
 <p>
 Kalin's PDF Creation Station will add two menus to your WordPress admin. One under tools and one under settings. 
