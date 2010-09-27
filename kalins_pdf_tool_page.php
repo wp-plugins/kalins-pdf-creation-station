@@ -5,6 +5,8 @@
 		exit;
 	}
 	
+	createPDFDir();//make sure our PDF dir exists
+	
 	$create_nonce = wp_create_nonce( 'kalins_pdf_tool_create' );
 	$delete_nonce = wp_create_nonce( 'kalins_pdf_tool_delete' );
 	$reset_nonce = wp_create_nonce( 'kalins_pdf_tool_reset' );
@@ -17,9 +19,15 @@
 	$count = 0;
 	
 	$uploads = wp_upload_dir();
-	//$pdfDir = $uploads['basedir'].'/kalin-pdf/';
-	$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/';
+	$pdfDir = $uploads['basedir'] .'/kalins-pdf/';
+	$pdfURL = $uploads['baseurl'] .'/kalins-pdf/';
+	
+	//$pdfDir = $pdfDirBase;
+	//$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/';
 	//if ($handle = opendir(get_bloginfo('wpurl') .'/wp-content/plugins/kalins-pdf-creation-station/pdf/')) {//open pdf directory//get_bloginfo('wpurl') .'/wp-content/plugins/kalins-pdf-creation-station/pdf/'
+	
+	//echo "my pdfDir" .$pdfDir;
+	
 	if ($handle = opendir($pdfDir)) {
 
 		while (false !== ($file = readdir($handle))) {
@@ -60,7 +68,7 @@ jQuery(document).ready(function($){
 			
 		var l = pdfList.length;
 		for(var i=0; i<l; i++){
-			var fileLink = tc("<a href='<?php echo WP_PLUGIN_URL; ?>/kalins-pdf-creation-station/pdf/" + pdfList[i].fileName + "' target='_blank'>" + pdfList[i].fileName + "</a>");
+			var fileLink = tc("<a href='<?php echo $pdfURL; ?>" + pdfList[i].fileName + "' target='_blank'>" + pdfList[i].fileName + "</a>");
 			tableHTML += "<tr>" + tc(i) + fileLink + tc(pdfList[i].date) + tc("<button name='btnDelete_" + i + "' id='btnDelete_" + i + "'>Delete</button>") + "</tr>";
 		}
 	
@@ -109,6 +117,8 @@ jQuery(document).ready(function($){
 		// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
 		jQuery.post(ajaxurl, data, function(response) {
 			//alert('Got this from the server: ' + response.substr(0, response.lastIndexOf("}") + 1));
+			
+			//alert(response);
 			var newFileData = JSON.parse(response.substr(0, response.lastIndexOf("}") + 1));//parse response while removing strange trailing 0 from the response (anyone know why that 0 is being added by jquery or wordpress?)
 			if(newFileData.status == "success"){
 				if(fileName == "all"){
@@ -395,7 +405,7 @@ jQuery(document).ready(function($){
         <button id="btnOpenDialog">Create PDF!</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type='button' id='btnReset'>Reset Defaults</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a name="createNow" id="createNow" href="javascript:void(0);" title="Use this if the 'Create PDF!' button won't properly show the popup. You won't be able to re-order your pages, but at least you can create a document.">create now!</a></p>
         <p align="center"><span id="createStatus">&nbsp;</span></p>
     </div>
-    <p>WARNING: I have discovered a bug where PDF files created on this page are deleted upon plugin upgrade. Please be certain to save your created PDF files to your local machine and re-upload them somewhere outside of the kalins-pdf-creation-station directory before I release a new version of this plugin. I'm currently working on a permanent fix.</p>
+    <p>WARNING: I have discovered a bug where PDF files created on this page are deleted upon plugin upgrade. Please be certain to save your created PDF files to your local machine and re-upload them somewhere outside of the kalins-pdf-creation-station directory before I release a new version of this plugin. This should be fixed in version 0.9.1, but I have to release the upgrade to be certain, so better safe than sorry. PDF files should now go in the uploads directory instead of the kalins-pdf-creation-station plugin directory.</p>
     <div class='collapse'><b>Existing PDF Files</b></div>
     <div class="generalHolder" id="pdfListDiv"><p>List of compiled documents goes here</p></div>
     

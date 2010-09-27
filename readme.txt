@@ -4,7 +4,7 @@ Donate link: http://kalinbooks.com/pdf-creation-station/
 Tags: PDF, document, export, print, pdf, creation
 Requires at least: 3.0
 Tested up to: 3.0.1
-Stable tag: 0.9
+Stable tag: trunk
 
 Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 == Description ==
@@ -81,6 +81,8 @@ I need to write a blog post about this, but I have a solution that requires chan
 *Added checkbox at the bottom of settings page to turn off the plugin's deactivation routine.
 *changed default link placement to 'none' so that links are not added to pages/posts until the user authorizes it
 
+= 0.9.1 =
+*Changed all code to direct, and/or create the kalins-pdf folder inside the uploads directory instead of placing the PDF files in the plugin directory to squash the bug where files were deleted upon plugin upgrade.
 
 == Upgrade Notice ==
 
@@ -92,6 +94,9 @@ No point in upgrading unless you have problems with the Create PDF! button
 
 = 0.9 =
 Slight overall blog performance increase. Minor security improvement. New 'Use default' option on page/post edit screen. New feature: disable database cleanup upon plugin deactivation
+
+= 0.9.1 =
+Bug fix: After this, your PDF files should not disappear after future plugin upgrades.
 
 == About ==
 

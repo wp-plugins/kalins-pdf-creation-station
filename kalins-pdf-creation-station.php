@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Kalin's PDF Creation Station
-Version: 0.9
+Version: 0.9.1
 Plugin URI: http://kalinbooks.com/pdf-creation-station/
 Description: Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 Author: Kalin Ringkvist
@@ -37,6 +37,8 @@ if ( !function_exists( 'add_action' ) ) {
 define("KALINS_PDF_ADMIN_OPTIONS_NAME", "kalins_pdf_admin_options");
 define("KALINS_PDF_TOOL_OPTIONS_NAME", "kalins_pdf_tool_options");
 
+$uploads = wp_upload_dir();
+$pdfDirBase = $uploads['basedir'].'/kalins-pdf/';
 
 function kalins_pdf_admin_page() {//load php that builds our admin page
 	require_once( WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_admin_page.php');
@@ -72,8 +74,6 @@ function kalins_pdf_admin_init(){
 	add_meta_box( 'kalinsPDF_sectionid', __( "PDF Creation Station", 'kalinsPDF_textdomain' ), 'kalinsPDF_inner_custom_box', 'post', 'side' );
     add_meta_box( 'kalinsPDF_sectionid', __( "PDF Creation Station", 'kalinsPDF_textdomain' ), 'kalinsPDF_inner_custom_box', 'page', 'side' );
 	//--------------------------------
-	
-	
 }
 
 function kalins_pdf_configure_pages() {
@@ -87,7 +87,6 @@ function kalins_pdf_configure_pages() {
 	
 	add_action( "admin_print_scripts-$mytool", 'kalins_pdf_admin_head' );
 	add_action('admin_print_styles-' . $mytool, 'kalins_pdf_admin_styles');
-	
 }
 
 function kalins_pdf_admin_head() {
@@ -147,14 +146,19 @@ function kalinsPDF_save_postdata( $post_id ) {
 		return $post_id;
 	}
 	
-	$pdfDir = WP_PLUGIN_DIR .'/kalins-pdf-creation-station/pdf/singles/';
+	//$pdfDir = WP_PLUGIN_DIR .'/kalins-pdf-creation-station/pdf/singles/';
+	//$uploads = wp_upload_dir();
+	//$pdfDir = $uploads['basedir'].'/kalins-pdf/';
+	//$pdfDir = $pdfDirBase .'singles/';
+	
+	$uploads = wp_upload_dir();
+	$pdfDir = $uploads['basedir'].'/kalins-pdf/singles/';
+	
 	$fileName = $post_id .'.pdf';
 	
 	if(file_exists($pdfDir .$fileName)){//if the pdf file for this page already exists,
 		unlink($pdfDir .$fileName);//delete it cuz it's now out of date since we're saving new post content
 	}
-	
-	
 	
 	// Check permissions
 	if ( 'page' == $_POST['post_type'] ) {
@@ -242,7 +246,12 @@ function kalins_pdf_reset_admin_defaults(){//called when user clicks the reset b
 	$kalinsPDFAdminOptions = kalins_pdf_getAdminSettings();
 	update_option(KALINS_PDF_ADMIN_OPTIONS_NAME, $kalinsPDFAdminOptions);
 	
-	$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/singles/';//we delete all cached single pdf files since the defaults have probably changed
+	//$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/singles/';//we delete all cached single pdf files since the defaults have probably changed
+	//$pdfDir = $pdfDirBase .'singles/';
+	$uploads = wp_upload_dir();
+	$pdfDir = $uploads['basedir'].'/kalins-pdf/singles/';
+	
+	
 	if ($handle = opendir($pdfDir)) {//open pdf directory
 		while (false !== ($file = readdir($handle))) {
 			if ($file != "." && $file != ".." && substr($file, stripos($file, ".")+1, 3) == "pdf") {//loop to find all relevant files 
@@ -287,7 +296,11 @@ function kalins_pdf_admin_save(){
 	
 	update_option(KALINS_PDF_ADMIN_OPTIONS_NAME, $kalinsPDFAdminOptions);//save options to database
 	
-	$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/singles/';
+	//$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/singles/';
+	//$pdfDir = $pdfDirBase .'singles/';
+	$uploads = wp_upload_dir();
+	$pdfDir = $uploads['basedir'].'/kalins-pdf/singles/';
+	
 	if ($handle = opendir($pdfDir)) {//open pdf directory
 		while (false !== ($file = readdir($handle))) {
 			if ($file != "." && $file != ".." && substr($file, stripos($file, ".")+1, 3) == "pdf") {//loop to find all relevant files 
@@ -316,11 +329,26 @@ function kalins_pdf_tool_create(){//called from create button
 }
 
 function kalins_pdf_tool_delete(){//called from either the "Delete All" button or the individual delete buttons
+	
+	//echo $pdfDirBase ."echoing";
+	
+	//echo "WTF!!";
+	
 	check_ajax_referer( "kalins_pdf_tool_delete" );
 	$outputVar = new stdClass();
 	$fileName = $_POST["filename"];
 	
-	$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/';
+	//echo json_encode($outputVar);
+	
+	
+	//$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/';
+	//$pdfDir = $pdfDirBase;
+	
+	$uploads = wp_upload_dir();
+	$pdfDir = $uploads['basedir'].'/kalins-pdf/';
+	
+	//echo $pdfDir .$fileName;
+	
 	if($fileName == "all"){//if we're deleting all of them
 		if ($handle = opendir($pdfDir)) {//open pdf directory
 			while (false !== ($file = readdir($handle))) {
@@ -434,7 +462,7 @@ function kalins_pdf_cleanup() {//deactivation hook. Clear all traces of PDF Crea
 			delete_post_meta($postinfo->ID, 'kalinsPDFMeta');
 		}
 	}
-}
+} 
 
 function kalins_pdf_init(){
 	//setup internationalization here
@@ -465,6 +493,20 @@ function kalins_pdf_global_shortcode_replace($str){//replace global shortcodes
 	$str = str_replace("[blog_url]", get_option('home'), $str);
 	$str = str_replace("[current_time]", date("Y-m-d H:i:s", time()), $str);
 	return $str;
+}
+
+function createPDFDir(){
+	
+	$uploadDir = wp_upload_dir();
+	$newDir = $uploadDir['basedir'].'/kalins-pdf';
+	
+	if(!file_exists($newDir)){
+		mkdir($newDir);
+	}
+	
+	if(!file_exists($newDir .'/singles')){
+		mkdir($newDir .'/singles');
+	}
 }
 
 //---------------------end utility functions-----------------------------------

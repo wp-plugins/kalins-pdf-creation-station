@@ -57,6 +57,10 @@
         <b>Plugin efficiency and clean up procedure</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
         If you are not using the settings page that applies PDF links on individual pages and posts, you may want to deactivate this plugin after you have built all your PDF files. Doing this will give you a slight overall blog performance increase (due to WordPress' architecture, all plugins slow your blog down at least a little even if they aren't doing anything). However, if you want to retain your settings for next time you reactivate, go into the settings page (in the settings menu to the left) and scroll to the bottom to find the checkbox labeled "Upon plugin deactivation clean up all database entries". Un-check it, scroll back up and hit save.
         </li>
+        <li>
+        <b>File Locations</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
+        PDF files are saved into the uploads directory in the kalins-pdf folder. You will need to delete this directory manually if you wish to remove it.
+        </li>
         
     </ul>
 </p>

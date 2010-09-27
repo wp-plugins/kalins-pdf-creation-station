@@ -17,6 +17,8 @@ try{
 	echo json_encode($outputVar);
 }
 
+createPDFDir();
+
 /*
 try{
 	ob_end_clean();
@@ -27,12 +29,16 @@ try{
 }
 */
 
+$uploads = wp_upload_dir();
+$uploadDir = $uploads['basedir'];
+$uploadURL = $uploads['baseurl'];
+
 $adminOptions = kalins_pdf_get_admin_options();
 
 if($isSingle){
 	$singleID = substr($_GET["singlepost"], 3);
-	$pdfDir = WP_PLUGIN_DIR .'/kalins-pdf-creation-station/pdf/singles/';//not sure why we need both a directory and a url - it seems like the two should evaluate to the exact same string
-	$pdfURL = get_bloginfo('wpurl') .'/wp-content/plugins/kalins-pdf-creation-station/pdf/singles/';
+	$pdfDir = $uploadDir .'/kalins-pdf/singles/';//not sure why we need both a directory and a url - it seems like the two should evaluate to the exact same string
+	$pdfURL = $uploadURL .'/kalins-pdf/singles/';
 	$fileName = $singleID .'.pdf';
 	
 	if(file_exists($pdfDir .$fileName)){//if the file already exists, simply redirect to that file and we're done
@@ -58,10 +64,9 @@ if($isSingle){
 		//$includeTables = $adminOptions["includeTables"];
 		$fontSize = $adminOptions["fontSize"];
 	}
-	
 }else{
 	try{
-		$pdfDir = WP_PLUGIN_DIR .'/kalins-pdf-creation-station/pdf/';
+		$pdfDir = $uploadDir .'/kalins-pdf/';
 		
 		if($_POST["fileNameCont"] != ""){
 			$fileName = kalins_pdf_global_shortcode_replace($_POST["fileNameCont"]) .".pdf";

@@ -5,6 +5,8 @@
 		exit;
 	}
 	
+	createPDFDir();
+	
 	$save_nonce = wp_create_nonce( 'kalins_pdf_admin_save' );
 	$reset_nonce = wp_create_nonce( 'kalins_pdf_admin_reset' );
 	

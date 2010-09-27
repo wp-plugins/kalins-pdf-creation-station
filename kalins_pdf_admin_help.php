@@ -66,8 +66,9 @@
         
         <br/>
         <li>
-        	<b>Notes about Caching:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
-        	To minimize server CPU usage, PDF files are cached within the plugin directory. When a user clicks on a link to a PDF file, the script will first check if the file exists, and if so, it will redirect the user. If there is no file, a brand new PDF will be generated. This means the first person to click the link will experience a slightly longer delay. Individual cached PDF files will be automatically deleted whenever a page or post is updated, ensuring that the files are always up-to-date. All the cached files will be deleted whenever you update or reset the settings on this page.
+        	<b>Notes about Caching:</b><br/>
+        	&nbsp;&nbsp;&nbsp;&nbsp;
+        	To minimize server CPU usage, PDF files are cached within uploads/kalins-pdf/singles/. When a user clicks on a link to a PDF file, the script will first check if the file exists, and if so, it will redirect the user. If there is no file, a brand new PDF will be generated. This means the first person to click the link will experience a slightly longer delay. Individual cached PDF files will be automatically deleted whenever a page or post is updated, ensuring that the files are always up-to-date. All the cached files will be deleted whenever you update or reset the settings on this page.
         </li>
     </ul>
 </p>
