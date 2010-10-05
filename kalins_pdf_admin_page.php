@@ -239,5 +239,6 @@ jQuery(document).ready(function($){
 		?>
     	<p>PDF Creation Station was built with WordPress version 3.0. It has NOT been tested on older versions and will most likely fail.</p>
         <p><input type='checkbox' id='chkDoCleanup' name='chkDoCleanup' <?php if($adminOptions["doCleanup"] == "true"){echo "checked='yes' ";} ?>></input> Upon plugin deactivation clean up all database entries</p>
+         <p>You may also like <a href="http://kalinbooks.com/easy-edit-links-wordpress-plugin/">Kalin's Easy Edit Links WordPress Plugin</a> - <br /> Adds a box to your page/post edit screen with links and edit buttons for all pages, posts, tags, categories, and links for convenient edit-switching and internal linking.</p>
     </div>
 </html>

@@ -452,7 +452,9 @@ jQuery(document).ready(function($){
 		}
 		?>
     	<p>PDF Creation Station was built with WordPress version 3.0. It has NOT been tested on older versions and will most likely fail.</p>
+         <p>You may also like <a href="http://kalinbooks.com/easy-edit-links-wordpress-plugin/">Kalin's Easy Edit Links WordPress Plugin</a> - <br /> Adds a box to your page/post edit screen with links and edit buttons for all pages, posts, tags, categories, and links for convenient edit-switching and internal linking.</p>
     </div>
     
-    <div id="sortDialog" title="Adjust Order and Create"><div id="sortHolder" class="sortHolder"></div><p align="center"><br /><button id="btnCreateCancel">Cancel</button>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button id="btnCreate">Create PDF!</button></p></div>
+    <div id="sortDialog" title="Adjust Order and Create"><div id="sortHolder" class="sortHolder"></div><p align="center"><br /><button id="btnCreateCancel">Cancel</button>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button id="btnCreate">Create PDF!</button></p>
+    </div>
 </html>
