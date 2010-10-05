@@ -405,7 +405,6 @@ jQuery(document).ready(function($){
         <button id="btnOpenDialog">Create PDF!</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type='button' id='btnReset'>Reset Defaults</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a name="createNow" id="createNow" href="javascript:void(0);" title="Use this if the 'Create PDF!' button won't properly show the popup. You won't be able to re-order your pages, but at least you can create a document.">create now!</a></p>
         <p align="center"><span id="createStatus">&nbsp;</span></p>
     </div>
-    <p>WARNING: I have discovered a bug where PDF files created on this page are deleted upon plugin upgrade. Please be certain to save your created PDF files to your local machine and re-upload them somewhere outside of the kalins-pdf-creation-station directory before I release a new version of this plugin. This should be fixed in version 0.9.1, but I have to release the upgrade to be certain, so better safe than sorry. PDF files should now go in the uploads directory instead of the kalins-pdf-creation-station plugin directory.</p>
     <div class='collapse'><b>Existing PDF Files</b></div>
     <div class="generalHolder" id="pdfListDiv"><p>List of compiled documents goes here</p></div>
     

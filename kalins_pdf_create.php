@@ -37,7 +37,7 @@ $adminOptions = kalins_pdf_get_admin_options();
 
 if($isSingle){
 	$singleID = substr($_GET["singlepost"], 3);
-	$pdfDir = $uploadDir .'/kalins-pdf/singles/';//not sure why we need both a directory and a url - it seems like the two should evaluate to the exact same string
+	$pdfDir = $uploadDir .'/kalins-pdf/singles/';
 	$pdfURL = $uploadURL .'/kalins-pdf/singles/';
 	$fileName = $singleID .'.pdf';
 	
@@ -74,6 +74,7 @@ if($isSingle){
 			$fileName = time() .".pdf";
 		}
 		
+		$documentType = "html";
 		$pageIDs = stripslashes($_POST["pageIDs"]);
 		$titlePage = stripslashes($_POST['titlePage']);
 		$finalPage = stripslashes($_POST['finalPage']);
@@ -83,6 +84,7 @@ if($isSingle){
 		$afterPost = stripslashes($_POST['afterPost']);
 		$headerTitle = stripslashes($_POST['headerTitle']);
 		$headerSub = stripslashes($_POST['headerSub']);
+		$headerKeyWords = "list, of, keywords,";
 		$includeImages = stripslashes($_POST['includeImages']);
 		//$includeTables = stripslashes($_POST['includeTables']);
 		$fontSize = (int) $_POST['fontSize'];

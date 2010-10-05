@@ -136,9 +136,9 @@ function kalinsPDF_save_postdata( $post_id ) {
 		return $post_id;
 	}
 	
-	if(!$_POST){//this check is here because the verify_nonce was throwing errors when error reporting was turned on - not sure why the 'DOING_AUTOSAVE' thing didn't catch it
-		return;
-	}
+	if (!isset($_POST['kalinsPDF_noncename'])){//this check is here because the verify_nonce was throwing errors when error reporting was turned on - not sure why the 'DOING_AUTOSAVE' thing didn't catch it
+		return $post_id;
+	} 
 	
 	// verify this came from our screen and with proper authorization,
 	// because save_post can be triggered at other times

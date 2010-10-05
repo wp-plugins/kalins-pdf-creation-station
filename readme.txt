@@ -1,6 +1,5 @@
 === Kalin's PDF Creation Station ===
 Contributors: kalinbooks
-Donate link: http://kalinbooks.com/pdf-creation-station/
 Tags: PDF, document, export, print, pdf, creation
 Requires at least: 3.0
 Tested up to: 3.0.1
@@ -11,9 +10,6 @@ Build highly customizable PDF documents from any combination of pages and posts,
 
 <p>
 Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post. Beta release. Please let me know if you find bugs.                  
-</p>
-<p>
-WARNING: Don't upgrade until you copy and save your current PDF files to a location outside of the plugin folder. I just discovered a bug where they disappear upon upgrading the plugin. Will try and fix by the next version.
 </p>
 <p>
 Kalin's PDF Creation Station will add two menus to your WordPress admin. One under tools and one under settings. 
@@ -84,6 +80,9 @@ I need to write a blog post about this, but I have a solution that requires chan
 = 0.9.1 =
 *Changed all code to direct, and/or create the kalins-pdf folder inside the uploads directory instead of placing the PDF files in the plugin directory to squash the bug where files were deleted upon plugin upgrade.
 
+= 0.9.2 =
+*Fixed a PHP error thrown on the Menus page when in debug mode. Got rid of warnings for previous upgrade problem.
+
 == Upgrade Notice ==
 
 = 0.7 =
@@ -97,6 +96,9 @@ Slight overall blog performance increase. Minor security improvement. New 'Use d
 
 = 0.9.1 =
 Bug fix: After this, your PDF files should not disappear after future plugin upgrades.
+
+= 0.9.2 = 
+Not a terribly important release.
 
 == About ==
 
