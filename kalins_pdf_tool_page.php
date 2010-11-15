@@ -140,7 +140,7 @@ jQuery(document).ready(function($){
 	
 	$('#btnCreate').click(function() {
 		
-		alert("create");
+		//alert("create");
 		
 		$('#sortDialog').dialog('close');
 								   
