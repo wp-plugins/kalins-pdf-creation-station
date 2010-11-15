@@ -139,6 +139,9 @@ jQuery(document).ready(function($){
 	
 	
 	$('#btnCreate').click(function() {
+		
+		alert("create");
+		
 		$('#sortDialog').dialog('close');
 								   
 		var sortString = $("#sortable").sortable('toArray').join(",");
@@ -267,8 +270,11 @@ jQuery(document).ready(function($){
 			modal: true
 		});
 		
+		alert("setting dialuge");
+		
 		$('#btnOpenDialog').click(function() {
-				
+			
+			alert("open dialogue");
 			
 			var sortHTML = '<ul id="sortable">';
 			var pageCount = 0;
@@ -300,7 +306,9 @@ jQuery(document).ready(function($){
 				$("#sortable").sortable();
 				$("#sortable").disableSelection();
 			});
-		
+			
+			alert("open dialogue 2");
+			
 			$('#sortDialog').dialog('open');
 			return false;
 		});
@@ -463,4 +471,7 @@ jQuery(document).ready(function($){
        
          
     </div>
+    
+    
+    <div id="sortDialog" title="Adjust Order and Create"><div id="sortHolder" class="sortHolder"></div><p align="center"><br /><button id="btnCreateCancel">Cancel</button>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button id="btnCreate">Create PDF!</button></p>
 </html>
