@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Kalin's PDF Creation Station
-Version: 0.9.2
+Version: 1.0
 Plugin URI: http://kalinbooks.com/pdf-creation-station/
 Description: Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 Author: Kalin Ringkvist
@@ -27,6 +27,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+/*
+
+figure out why character count doesn't work very well - perhaps exclude images and youtube videos
+
 */
 
 if ( !function_exists( 'add_action' ) ) {
@@ -160,6 +166,15 @@ function kalinsPDF_save_postdata( $post_id ) {
 		unlink($pdfDir .$fileName);//delete it cuz it's now out of date since we're saving new post content
 	}
 	
+	$savedPost = get_post($post->ID, ARRAY_A);
+	$slug = $savedPost['post_name'];
+	
+	$fileName = $slug .'.pdf';
+	
+	if(file_exists($pdfDir .$fileName)){//if the pdf file for this page already exists,
+		unlink($pdfDir .$fileName);//delete it cuz it's now out of date since we're saving new post content
+	}
+	
 	// Check permissions
 	if ( 'page' == $_POST['post_type'] ) {
 		if ( !current_user_can( 'edit_page', $post_id ) ){
@@ -177,25 +192,27 @@ function kalinsPDF_save_postdata( $post_id ) {
 	
 	update_post_meta($post_id, 'kalinsPDFMeta', json_encode($meta));
 	
-	//echo "updating post meta";
+	//echo "updating post meta" .$_POST['post_slug'];
 }
 
 function kalinsPDF_content_filter($content){
-	if(!is_single() && !is_page()){//if we're not on a single page/post we don't need to do anything else
+	$adminOptions = kalins_pdf_get_admin_options();
+	
+	if($adminOptions['showOnMulti'] == "false" && !is_single() && !is_page()){//if we're not on a single page/post we don't need to do anything else
 		return $content;
 	}
 	
 	global $wp_query;
 	$post = $wp_query->post;
 	$meta = json_decode(get_post_meta($post->ID, "kalinsPDFMeta", true));
-	$adminOptions = kalins_pdf_get_admin_options();
+	
 	
 	if($meta){
 		$showLink = $meta->showLink;
 	}
 	
 	if(!$meta || $showLink == "default"){
-		if(strlen($content) > $adminOptions['charCount']){//if this post is longer than the minimum character count
+		if(str_word_count(strip_tags($content)) > $adminOptions['wordCount']){//if this post is longer than the minimum character count
 			$showLink = $adminOptions['showLink'];
 		}else{
 			return $content;//if it's not long enough, just quit
@@ -206,10 +223,18 @@ function kalinsPDF_content_filter($content){
 		return $content;
 	}
 	
+	$postID = $post->ID;
+	
+	//$slug = ""
+	
+	/*if($adminOptions["filenameByTitle"]){
+		$postID = $post->post_name;
+	}*/
+	
 	if($post->post_type == "page"){
-		$postID = "pg_" .$post->ID;
+		$postID = "pg_" .$postID;
 	}else{
-		$postID = "po_" .$post->ID;
+		$postID = "po_" .$postID;
 	}
 	
 	//-------remove these three lines if you aren't using shortcodes in the link and you want to conserve processing power
@@ -285,10 +310,15 @@ function kalins_pdf_admin_save(){
 	$kalinsPDFAdminOptions['afterLink'] = stripslashes($_POST['afterLink']);
 	
 	$kalinsPDFAdminOptions["fontSize"] = (int) $_POST['fontSize'];
-	$kalinsPDFAdminOptions['charCount'] = (int) stripslashes($_POST['charCount']);
+	$kalinsPDFAdminOptions['wordCount'] = (int) stripslashes($_POST['wordCount']);
 	
 	$kalinsPDFAdminOptions['showLink'] = stripslashes($_POST['showLink']);
 	$kalinsPDFAdminOptions["includeImages"] = stripslashes($_POST['includeImages']);
+	
+	$kalinsPDFAdminOptions["showOnMulti"] = stripslashes($_POST['showOnMulti']);//filenameByTitle
+	$kalinsPDFAdminOptions["filenameByTitle"] = stripslashes($_POST['filenameByTitle']);
+	
+	
 	//$kalinsPDFAdminOptions["includeTables"] = stripslashes($_POST['includeTables']);
 	
 	$kalinsPDFAdminOptions["doCleanup"] = stripslashes($_POST['doCleanup']);
@@ -411,19 +441,23 @@ function kalins_pdf_getAdminSettings(){//simply returns all our default option v
 	$kalinsPDFAdminOptions = array('headerTitle' => '[post_title] - [post_date]',
 		'headerSub' => 'by [post_author] - [blog_name] - [blog_url]',
 		'includeImages' => 'false');
-	$kalinsPDFAdminOptions['beforePage'] = '<h1>[post_title]</h1><p><b>by [post_author] - [post_date]</b></p><p><a href="[guid]">[guid]</a></p>';
-	$kalinsPDFAdminOptions['beforePost'] = '<h1>[post_title]</h1><p><b>by [post_author] - [post_date]</b></p><p><a href="[guid]">[guid]</a></p>';;
+	$kalinsPDFAdminOptions['beforePage'] = '<h1>[post_title]</h1><p><b>by [post_author] - [post_date]</b></p><p><a href="[post_permalink]">[post_permalink]</a></p>';
+	$kalinsPDFAdminOptions['beforePost'] = '<h1>[post_title]</h1><p><b>by [post_author] - [post_date]</b></p><p><a href="[post_permalink]">[post_permalink]</a></p>';;
 	$kalinsPDFAdminOptions['afterPage'] = '<p align="center">_______________________________________________</p><p align="center">PDF generated by Kalin\'s PDF Creation Station</p>';
 	$kalinsPDFAdminOptions['afterPost'] = '<p align="center">_______________________________________________</p><p align="center">PDF generated by Kalin\'s PDF Creation Station</p>';
 	$kalinsPDFAdminOptions['titlePage'] = '';
 	$kalinsPDFAdminOptions['finalPage'] = '';
 	$kalinsPDFAdminOptions['fontSize'] = 10;
 	$kalinsPDFAdminOptions['showLink'] = "none";
+	
+	$kalinsPDFAdminOptions["showOnMulti"] = "false";//filenameByTitle
+	$kalinsPDFAdminOptions["filenameByTitle"] = "true";
+	
 	$kalinsPDFAdminOptions['linkText'] = "Download [post_title] as PDF";
 	$kalinsPDFAdminOptions['beforeLink'] = '<br/><p align="right">-- ';
 	$kalinsPDFAdminOptions['afterLink'] = " --</p><br/>";
 	$kalinsPDFAdminOptions['doCleanup'] = "true";
-	$kalinsPDFAdminOptions['charCount'] = 1000;
+	$kalinsPDFAdminOptions['wordCount'] = 0;
 	
 	return $kalinsPDFAdminOptions;
 }
@@ -433,8 +467,8 @@ function kalins_pdf_getDefaultOptions(){//simply returns all our default option 
 		'headerSub' => '[blog_description] - [blog_url]',
 		'filename' => '[blog_name]',
 		'includeImages' => 'false');
-	$kalinsPDFAdminOptions['beforePage'] = '<h1>[post_title]</h1><p><b>by [post_author] - [post_date]</b></p><p><a href="[guid]">[guid]</a></p>';
-	$kalinsPDFAdminOptions['beforePost'] = '<h1>[post_title]</h1><p><b>by [post_author] - [post_date]</b></p><p><a href="[guid]">[guid]</a></p>';;
+	$kalinsPDFAdminOptions['beforePage'] = '<h1>[post_title]</h1><p><b>by [post_author] - [post_date]</b></p><p><a href="[post_permalink]">[post_permalink]</a></p>';
+	$kalinsPDFAdminOptions['beforePost'] = '<h1>[post_title]</h1><p><b>by [post_author] - [post_date]</b></p><p><a href="[post_permalink]">[post_permalink]</a></p>';;
 	$kalinsPDFAdminOptions['afterPage'] = '<p align="center">_______________________________________________</p>';
 	$kalinsPDFAdminOptions['afterPost'] = '<p align="center">_______________________________________________</p>';
 	$kalinsPDFAdminOptions['titlePage'] = '<p><font size="40">[blog_name]</font></p><p><font size="25">[blog_description]</font></p><p>PDF generated [current_time] by Kalin\'s PDF Creation Station WordPress plugin</p>';
@@ -461,6 +495,21 @@ function kalins_pdf_cleanup() {//deactivation hook. Clear all traces of PDF Crea
 		foreach( $allposts as $postinfo) {
 			delete_post_meta($postinfo->ID, 'kalinsPDFMeta');
 		}
+		
+		/*
+		$uploadDir = wp_upload_dir();
+		$newDir = $uploadDir['basedir'].'/kalins-pdf';
+	
+		if(!file_exists($newDir .'/singles')){
+			unlink($newDir .'/singles');
+		}
+		*/
+		
+		
+		//unlink($pdfDir .$fileName);
+		
+		
+		
 	}
 } 
 
@@ -481,6 +530,7 @@ function kalins_pdf_page_shortcode_replace($str, $page){//replace all passed in 
 		$str = str_replace($SCList[$i], $page->$scName, $str);
 	}
 	$str = str_replace("[post_author]", get_userdata($page->post_author)->user_login, $str);//post_author requires an extra function call to convert the userID into a name so we can't do it in the loop above
+	$str = str_replace("[post_permalink]", get_permalink( $page->ID ), $str);
 	
 	$str = kalins_pdf_global_shortcode_replace($str);//then parse the global shortcodes
 	

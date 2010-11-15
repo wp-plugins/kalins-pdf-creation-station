@@ -35,6 +35,17 @@
                 <li><b>Minimum Post Character Count</b><br />&nbsp;&nbsp;&nbsp;&nbsp;
                 Set the minimum number of characters a page/post can have before it receives a PDF link. Note: This feature is not perfect. For the sake of efficiency, the script does not discriminate between HTML and actual text, so a YouTube video, for example, may count as several hundred characters. Settings on the individual page/post edit screen will override this value if it becomes an issue on certain pages.
                 </li>
+                
+                
+                <li><b>Use post slug for PDF filename</b><br />&nbsp;&nbsp;&nbsp;&nbsp;
+                Check this to use post slugs for filenames instead of ID numbers. I was originally worried this would create conflicts, but it appears as though WordPress forces all slugs to be unique.
+                </li>
+                
+                <li><b>Show on home, category and tag pages</b><br />&nbsp;&nbsp;&nbsp;&nbsp;
+                Check this only if you are using the entire post content on all these pages. If you use excerpts, the link will still be applied but will be stripped of it's HTML, making the excerpt rather ugly. Your theme normally handles the loop on these pages so I can't figure out a way to allow a plugin to have reliable control over the display on these pages. However, if you know a little about themes and PHP, it should be relatively easy to hack your theme to show the link on these pages. I wrote a blog post explaining how to do this.
+                </li>
+                
+                
                 <li><b>Save Settings:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
                 Remember to click this button to save all your settings.
                 </li>

@@ -424,6 +424,7 @@ jQuery(document).ready(function($){
         <ul>
         <li><b>[ID]</b> - the ID number of the page/post</li>
         <li><b>[post_author]</b> - author of the page/post</li>
+        <li><b>[post_permalink]</b> - the page permalink</li>
         <li><b>[post_date]</b> - date page/post was created</li>
         <li><b>[post_date_gmt]</b> - date page/post was created in gmt time</li>
         <li><b>[post_title]</b> - page/post title</li>
@@ -443,18 +444,23 @@ jQuery(document).ready(function($){
     <div class='collapse'><b>About</b></div>
     <div class="generalHolder">
     
-    	Thank you for using PDF Creation Station
-                
+    	<p>Thank you for using PDF Creation Station. To report bugs, request help or suggest new features, visit <a href="http://kalinbooks.com/pdf-creation-station/" target="_blank">KalinBooks.com/pdf-creation-station</a>. If you find this plugin useful, please pay it forward to the community.</p>
+        <p>
         <?php 
 		$versionNum = (int) substr(phpversion(), 0, 1);//check php version and possibly warn user
 		if($versionNum < 5){//I have no idea what this thing will do at anything below 5.2.11 :)
 			echo "<p>You are running PHP version "  .phpversion() .". This plugin was built with PHP version 5.2.11 and has NOT been tested with older versions. It likely requires at least PHP version 5.0.</p>";
 		}
 		?>
+        </p>
     	<p>PDF Creation Station was built with WordPress version 3.0. It has NOT been tested on older versions and will most likely fail.</p>
-         <p>You may also like <a href="http://kalinbooks.com/easy-edit-links-wordpress-plugin/">Kalin's Easy Edit Links WordPress Plugin</a> - <br /> Adds a box to your page/post edit screen with links and edit buttons for all pages, posts, tags, categories, and links for convenient edit-switching and internal linking.</p>
-    </div>
-    
-    <div id="sortDialog" title="Adjust Order and Create"><div id="sortHolder" class="sortHolder"></div><p align="center"><br /><button id="btnCreateCancel">Cancel</button>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button id="btnCreate">Create PDF!</button></p>
+       
+        
+        
+         <p>You may also like <a href="http://kalinbooks.com/easy-edit-links-wordpress-plugin/" target="_blank">Kalin's Easy Edit Links</a> - <br /> Adds a box to your page/post edit screen with links and edit buttons for all pages, posts, tags, categories, and links for convenient edit-switching and internal linking.</p>
+         
+         <p>Or <a href="http://kalinbooks.com/post-list-wordpress-plugin/" target="_blank">Kalin's Post List</a> - <br /> Use a shortcode in your posts to insert dynamic, highly customizable lists of posts, pages, images, or attachments based on categories and tags. Works for table-of-contents pages or as a related posts plugin. (Will release by December 2010.)</p>
+       
+         
     </div>
 </html>

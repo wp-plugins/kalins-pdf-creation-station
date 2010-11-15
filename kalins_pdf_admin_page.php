@@ -11,7 +11,6 @@
 	$reset_nonce = wp_create_nonce( 'kalins_pdf_admin_reset' );
 	
 	$adminOptions = kalins_pdf_get_admin_options();
-	
 ?>
 
 
@@ -47,7 +46,7 @@ jQuery(document).ready(function($){
 				
 				$('#txtFontSize').val(newValues["fontSize"]);
 				$('#txtFilename').val(newValues["filename"]);
-				$('#txtCharCount').val(newValues["charCount"]);
+				$('#txtWordCount').val(newValues["wordCount"]);
 				
 				if(newValues["includeImages"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
 					$('#chkIncludeImages').attr('checked', true);
@@ -88,7 +87,12 @@ jQuery(document).ready(function($){
 		data.includeImages = $("#chkIncludeImages").is(':checked');
 		//data.includeTables = $("#chkIncludeTables").is(':checked');
 		data.showLink = $("input[name='kalinsPDFLink']:checked").val();
-		data.charCount = $("#txtCharCount").val();
+		data.wordCount = $("#txtWordCount").val();
+		
+		data.showOnMulti = $("#chkShowOnMulti").is(':checked');
+		
+		data.filenameByTitle = $("#chkFilenameByTitle").is(':checked');
+		
 		data.doCleanup =  $("#chkDoCleanup").is(':checked');
 		
 		$('#createStatus').html("Saving settings...");
@@ -123,7 +127,7 @@ jQuery(document).ready(function($){
 
 <h2>PDF Creation Station</h2>
 
-<h3>by Kalin Ringkvist - kalinbooks.com</h3>
+<h3>by Kalin Ringkvist - <a href="http://kalinbooks.com/">kalinbooks.com</a></h3>
 
 <p>Settings for creating PDF files on individual pages and posts. For more information, click the help button to the right.</p>
 
@@ -190,8 +194,13 @@ jQuery(document).ready(function($){
 		}
 		?>
         <p>
-        <input type="text" id="txtCharCount" size="3" maxlength="5" value='<?php echo $adminOptions["charCount"]; ?>' /> Minimum post character count
-        </p>
+        <input type="text" id="txtWordCount" size="3" maxlength="5" value='<?php echo $adminOptions["wordCount"]; ?>' /> Minimum post character count (0 = no limit)
+        </p><br/>
+        
+        <p><input type='checkbox' id='chkFilenameByTitle' name='chkFilenameByTitle' <?php if($adminOptions["filenameByTitle"] == "true"){echo "checked='yes' ";} ?>></input> Use post slug for PDF filename instead of ID</p>
+        
+        <p><input type='checkbox' id='chkShowOnMulti' name='chkShowOnMulti' <?php if($adminOptions["showOnMulti"] == "true"){echo "checked='yes' ";} ?>></input> Show on home, category, tag and search pages (does not work if you use excerpts on any of these pages)</p><br/>
+        
         <p><!--&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkIncludeTables' name='chkIncludeTables' if($adminOptions["includeTables"] == 'true'){echo "checked='yes' ";} ></input> Include Tables --></p>
         
 </p>
@@ -210,6 +219,7 @@ jQuery(document).ready(function($){
         <li><b>[blog_url]</b> - blog base url</li>
         <li><b>[ID]</b> - the ID number of the page/post</li>
         <li><b>[post_author]</b> - author of the page/post</li>
+        <li><b>[post_permalink]</b> - the page permalink</li>
         <li><b>[post_date]</b> - date page/post was created</li>
         <li><b>[post_date_gmt]</b> - date page/post was created in gmt time</li>
         <li><b>[post_title]</b> - page/post title</li>
@@ -229,16 +239,25 @@ jQuery(document).ready(function($){
     <div class='collapse'><b>About</b></div>
     <div class="generalHolder">
     
-    	Thank you for using PDF Creation Station
-        
+    	<p>Thank you for using PDF Creation Station. To report bugs, request help or suggest new features, visit <a href="http://kalinbooks.com/pdf-creation-station/" target="_blank">KalinBooks.com/pdf-creation-station</a>. If you find this plugin useful, please pay it forward to the community.</p>
+        <p>
         <?php 
 		$versionNum = (int) substr(phpversion(), 0, 1);//check php version and possibly warn user
 		if($versionNum < 5){//I have no idea what this thing will do at anything below 5.2.11 :)
 			echo "<p>You are running PHP version "  .phpversion() .". This plugin was built with PHP version 5.2.11 and has NOT been tested with older versions. It likely requires at least PHP version 5.0.</p>";
 		}
 		?>
+        </p>
     	<p>PDF Creation Station was built with WordPress version 3.0. It has NOT been tested on older versions and will most likely fail.</p>
         <p><input type='checkbox' id='chkDoCleanup' name='chkDoCleanup' <?php if($adminOptions["doCleanup"] == "true"){echo "checked='yes' ";} ?>></input> Upon plugin deactivation clean up all database entries</p>
-         <p>You may also like <a href="http://kalinbooks.com/easy-edit-links-wordpress-plugin/">Kalin's Easy Edit Links WordPress Plugin</a> - <br /> Adds a box to your page/post edit screen with links and edit buttons for all pages, posts, tags, categories, and links for convenient edit-switching and internal linking.</p>
+        
+        
+        
+         <p>You may also like <a href="http://kalinbooks.com/easy-edit-links-wordpress-plugin/" target="_blank">Kalin's Easy Edit Links</a> - <br /> Adds a box to your page/post edit screen with links and edit buttons for all pages, posts, tags, categories, and links for convenient edit-switching and internal linking.</p>
+         
+         <p>Or <a href="http://kalinbooks.com/post-list-wordpress-plugin/" target="_blank">Kalin's Post List</a> - <br /> Use a shortcode in your posts to insert dynamic, highly customizable lists of posts, pages, images, or attachments based on categories and tags. Works for table-of-contents pages or as a related posts plugin. (Will release by December 2010.)</p>
+       
+         
+         
     </div>
 </html>

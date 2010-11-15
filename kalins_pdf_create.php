@@ -29,6 +29,8 @@ try{
 }
 */
 
+global $wpdb, $post;
+
 $uploads = wp_upload_dir();
 $uploadDir = $uploads['basedir'];
 $uploadURL = $uploads['baseurl'];
@@ -39,7 +41,24 @@ if($isSingle){
 	$singleID = substr($_GET["singlepost"], 3);
 	$pdfDir = $uploadDir .'/kalins-pdf/singles/';
 	$pdfURL = $uploadURL .'/kalins-pdf/singles/';
-	$fileName = $singleID .'.pdf';
+	
+	if($adminOptions["filenameByTitle"] == "true"){
+		
+		$singlePost = "";
+		
+		if(substr($_GET["singlepost"], 0, 2) == "po"){
+			$singlePost = get_post($singleID);
+		}else{
+			$singlePost = get_page($singleID);
+		}
+		
+		
+		$fileName = $singlePost->post_name .'.pdf'; 
+		
+		//$fileName = $singleID .'.pdf'; 
+	}else{
+		$fileName = $singleID .'.pdf';
+	}
 	
 	if(file_exists($pdfDir .$fileName)){//if the file already exists, simply redirect to that file and we're done
 		header("Location: " .$pdfURL .$fileName);//for some reason pdfDir doesn't work here so we use pdfURL
@@ -120,7 +139,7 @@ if($isSingle){
 	}
 }
 
-global $wpdb, $post;
+
 
 $result = array ();
 

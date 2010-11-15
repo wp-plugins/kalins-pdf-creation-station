@@ -83,6 +83,9 @@ I need to write a blog post about this, but I have a solution that requires chan
 = 0.9.2 =
 *Fixed a PHP error thrown on the Menus page when in debug mode. Got rid of warnings for previous upgrade problem.
 
+= 1.0 =
+Added [post_permalink] shortcode. Also added "Use post slug for PDF filename" and "Show on home, category, tag and search pages" options on settings page. Changed the clunky character count to word count, which should now function more accurately.
+
 == Upgrade Notice ==
 
 = 0.7 =
@@ -99,6 +102,9 @@ Bug fix: After this, your PDF files should not disappear after future plugin upg
 
 = 0.9.2 = 
 Not a terribly important release.
+
+= 1.0 =
+Added a couple new little features. Character count is now Word Count. You will need to update your settings.
 
 == About ==
 
