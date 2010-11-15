@@ -270,11 +270,11 @@ jQuery(document).ready(function($){
 			modal: true
 		});
 		
-		alert("setting dialuge");
+		//alert("setting dialuge");
 		
 		$('#btnOpenDialog').click(function() {
 			
-			alert("open dialogue");
+			//alert("open dialogue");
 			
 			var sortHTML = '<ul id="sortable">';
 			var pageCount = 0;
@@ -307,7 +307,7 @@ jQuery(document).ready(function($){
 				$("#sortable").disableSelection();
 			});
 			
-			alert("open dialogue 2");
+			//alert("open dialogue 2");
 			
 			$('#sortDialog').dialog('open');
 			return false;

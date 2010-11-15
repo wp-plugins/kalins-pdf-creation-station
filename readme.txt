@@ -89,6 +89,9 @@ Added [post_permalink] shortcode. Also added "Use post slug for PDF filename" an
 = 1.1 =
 Bug fix. I broke the PDF creation popup with v 1.0 and had to make an emergency fix.
 
+= 1.2 =
+removed testing alerts
+
 == Upgrade Notice ==
 
 = 0.7 =
@@ -111,6 +114,9 @@ I broke this release. Move on to next version.
 
 = 1.1 =
 Bug fix. Added a couple new little features. Character count is now Word Count. You will need to update your settings.
+
+= 1.2 =
+removed testing alerts
 
 == About ==
 
