@@ -29,11 +29,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-/*
-
-figure out why character count doesn't work very well - perhaps exclude images and youtube videos
-
-*/
 
 if ( !function_exists( 'add_action' ) ) {
 	echo "Hi there!  I'm just a plugin, not much I can do when called directly.";
@@ -522,7 +517,7 @@ function kalins_pdf_init(){
 
 //Note: none of these shortcodes are entered into the standard WordPress shortcode system so they only function within Kalin's PDF Creation Station
 function kalins_pdf_page_shortcode_replace($str, $page){//replace all passed in shortcodes
-	$SCList =  array("[ID]", "[post_date]", "[post_date_gmt]", "[post_title]", "[post_excerpt]", "[post_name]", "[post_modified]", "[post_modified_gmt]", "[guid]", "[comment_count]");
+	$SCList =  array("[ID]", "[post_date]", "[post_date_gmt]", "[post_title]", "[post_name]", "[post_modified]", "[post_modified_gmt]", "[guid]", "[comment_count]");
 	
 	$l = count($SCList);
 	for($i = 0; $i<$l; $i++){//loop through all page shortcodes (the ones that only work for before/after page/post and refer directly to a page/post attribute)
@@ -531,6 +526,13 @@ function kalins_pdf_page_shortcode_replace($str, $page){//replace all passed in 
 	}
 	$str = str_replace("[post_author]", get_userdata($page->post_author)->user_login, $str);//post_author requires an extra function call to convert the userID into a name so we can't do it in the loop above
 	$str = str_replace("[post_permalink]", get_permalink( $page->ID ), $str);
+	
+	
+	if($page->post_excerpt == ""){//if there's no excerpt applied to the post, extract one
+		$str = str_replace("[post_excerpt]", wp_trim_excerpt($page->post_content), $str);
+	}else{
+		$str = str_replace("[post_excerpt]", $page->post_excerpt, $str);
+	}
 	
 	$str = kalins_pdf_global_shortcode_replace($str);//then parse the global shortcodes
 	
