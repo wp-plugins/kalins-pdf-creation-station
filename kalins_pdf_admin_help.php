@@ -29,6 +29,9 @@
                 <li><b>Content Font Size:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
                 Set the font size for the main content of the PDF files. You MUST enter a number into this field. You may use font tags to override this in inserted HTML.
                 </li>
+                <li><b>Run other plugin shortcodes:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
+                Select whether or not you want other plugins to run their shortcode functions on the content before PDF generation. If not selected, shortcodes will be removed from the content. Not guaranteed to look pretty for all plugins.
+                </li>
                 <li><b>Default Link Placement:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
                 Choose where on the blog page you would like the PDF link displayed: top, bottom, or not at all. This setting can be overridden on the individual page/post edit pages, allowing you to create PDF files for some pages and not for others. For pages/posts saved before the installation of PDF Creation Station, the links will be displayed according to the default you set here.
                 </li>
