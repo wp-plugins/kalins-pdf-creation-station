@@ -39,7 +39,7 @@ Future features: http://kalinbooks.com/pdf-creation-station/pdf-creation-possibl
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Find the PDF Creation Station menu under 'tools' and begin creating custom PDF documents of your website. Or go into the PDF Creaction Station menu under 'settings' and begin setting up the options for automatic individual page generation.
 
-Note: requires PHP 5.2
+Note: probably requires PHP 5.2 and WordPress 3.0.
 
 == Frequently Asked Questions ==
 
@@ -51,9 +51,6 @@ In both the settings and tool pages you can find help in the built-in wordpress 
 
 Make sure to use double quotes instead of single quotes when inserting arbitrary HTML attributes because of a bug with the core PDF creation engine (TCPDF).
 
-= what if my wp-config.php is in a non-standard location? =
-
-I need to write a blog post about this, but I have a solution that requires changing one line of code in the plugin. Contact me for details.
 
 == Screenshots ==
 
@@ -92,6 +89,20 @@ Bug fix. I broke the PDF creation popup with v 1.0 and had to make an emergency 
 = 1.2 =
 removed testing alerts
 
+= 2.0 =
+
+*Added support for custom post types
+*moved the code identifying the default PDF directory and URL into a few constants at the top of kalins-pdf-creation-station.pdf, so that hackers can easily change them to whatever they want. Added example code that can be un-commented to change the PDF directory to use the base domain of your site instead of the wordpress uploads directory.
+*Fixed minor bug where 'reset defaults' on the settings page wasn't refreshing the 'post slug' and 'show on home' checkboxes
+*Added "create all" button on settings page
+*Added "automatically generate PDFs on publish and update" option on settings page
+*changed blockquote code so it uses the 'pre' tag because it was the only way to get TCPDF to actually display anything since it doesn't want to render blockquotes or tables properly
+*added post_excerpt code to use "wp_trim_excerpt", which doesn't appear to be functioning anymore -- then changed to manually extract 250 characters from the page content
+*added option to run other plugin shortcodes to both settings and tool pages
+*added option to convert embedded youtube videos into a link to that video
+*added 'format' parameter to all time shortcodes for total custom date/time formatting
+*added 'length' parameter to the post_excerpt shortcode to set character count of the excerpt
+
 == Upgrade Notice ==
 
 = 0.7 =
@@ -117,6 +128,10 @@ Bug fix. Added a couple new little features. Character count is now Word Count. 
 
 = 1.2 =
 removed testing alerts
+
+= 2.0 =
+A few new features. Default formatting on Date/time shortcodes changed a little with the new formatting possibilities.
+
 
 == About ==
 
