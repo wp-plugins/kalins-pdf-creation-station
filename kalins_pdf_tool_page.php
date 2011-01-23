@@ -5,27 +5,49 @@
 		exit;
 	}
 	
-	createPDFDir();//make sure our PDF dir exists
+	kalinsPDF_createPDFDir();//make sure our PDF dir exists
 	
 	$create_nonce = wp_create_nonce( 'kalins_pdf_tool_create' );
 	$delete_nonce = wp_create_nonce( 'kalins_pdf_tool_delete' );
 	$reset_nonce = wp_create_nonce( 'kalins_pdf_tool_reset' );
 	
 	$adminOptions = kalins_pdf_get_tool_options();
-	$pageList = get_pages();
+	
+	
+	/*$post_types = get_post_types('','names');
+	$typeString = "";
+	foreach ($post_types as $post_type ) {//loop to add a meta box to each type of post (pages, posts and custom)
+		if($post_type != "post" && $post_type != "attachment" && $post_type != "revision"){
+			$typeString = $typeString ."," .$post_type; 
+		}
+	}*/
 	$postList = get_posts('numberposts=-1');
-
+	$pageList = get_pages();
+	
+	$customList = get_posts('numberposts=-1&post_type=any');
+	$l = count($customList);
+	for($i=$l - 1; $i >= 0; $i--){//loop to remove all posts, pages and attachments from our custom list so we can have all custom types in the same array
+		if($customList[$i]->post_type == "post" || $customList[$i]->post_type == "attachment" || $customList[$i]->post_type == "page"){
+			unset($customList[$i]);
+		}
+	}
+	$customList = array_values($customList);//recreate the array because somehow unset() doesn't re-index the array
+	
 	$pdfList = array();
 	$count = 0;
 	
 	$uploads = wp_upload_dir();
-	$pdfDir = $uploads['basedir'] .'/kalins-pdf/';
+	//$pdfDir = $uploads['basedir'] .'/kalins-pdf/';
+	$pdfDir = KALINS_PDF_DIR;
+	
 	$pdfURL = $uploads['baseurl'] .'/kalins-pdf/';
 	
+	$pdfURL = KALINS_PDF_URL;
+	
+	//echo $pdfURL . "url and dir" . $pdfDir;
 	//$pdfDir = $pdfDirBase;
 	//$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/';
 	//if ($handle = opendir(get_bloginfo('wpurl') .'/wp-content/plugins/kalins-pdf-creation-station/pdf/')) {//open pdf directory//get_bloginfo('wpurl') .'/wp-content/plugins/kalins-pdf-creation-station/pdf/'
-	
 	//echo "my pdfDir" .$pdfDir;
 	
 	if ($handle = opendir($pdfDir)) {
@@ -41,6 +63,7 @@
 		}
 		closedir($handle);
 	}
+	
 ?>
 
 
@@ -50,11 +73,13 @@ jQuery(document).ready(function($){
 	var pdfList = <?php echo json_encode($pdfList);//hand over the objects and vars that javascript will need?>;
 	var pageList = <?php echo json_encode($pageList);?>;
 	var postList = <?php echo json_encode($postList); ?>;
+	var customList = <?php echo json_encode($customList); ?>;
 	var createNonce = '<?php echo $create_nonce; //pass a different nonce security string for each possible ajax action?>'
 	var deleteNonce = '<?php echo $delete_nonce; ?>';
 	var resetNonce = '<?php echo $reset_nonce; ?>';
 	
 	function buildFileTable(){//build the file table - we build it all in javascript so we can simply rebuild it whenever an entry is added through ajax
+	
 		if(pdfList.length == 0){
 			$('#pdfListDiv').html("You do not have any custom PDF files.");
 			return;
@@ -99,6 +124,7 @@ jQuery(document).ready(function($){
 		for(var i=0; i<l; i++){
 			$('#chk' + pageList[i]['ID']).attr('checked', selectAllPageState);	
 		}
+		
 		selectAllPageState = !selectAllPageState;
 	});
 	
@@ -107,6 +133,12 @@ jQuery(document).ready(function($){
 		for(var i=0; i<l; i++){
 			$('#chk' + postList[i]['ID']).attr('checked', selectAllPostState);
 		}
+		
+		l = customList.length;
+		for(var i=0; i<l; i++){
+			$('#chk' + customList[i]['ID']).attr('checked', selectAllPostState);	
+		}
+		
 		selectAllPostState = !selectAllPostState;
 	});
 	
@@ -137,11 +169,7 @@ jQuery(document).ready(function($){
 		});
 	}
 	
-	
 	$('#btnCreate').click(function() {
-		
-		//alert("create");
-		
 		$('#sortDialog').dialog('close');
 								   
 		var sortString = $("#sortable").sortable('toArray').join(",");
@@ -161,6 +189,14 @@ jQuery(document).ready(function($){
 				pageCount++;
 			}
 		}
+		
+		var l = customList.length;		   
+		for(var i=0; i<l; i++){
+			if($('#chk' + customList[i]['ID']).is(':checked')){
+				sortString += 'po_' + customList[i]['ID'] + ",";
+				pageCount++;
+			}
+		}
 
 		var l = postList.length;		   
 		for(var i=0; i<l; i++){
@@ -176,9 +212,7 @@ jQuery(document).ready(function($){
 		}
 		
 		sortString = sortString.substr(0, sortString.length - 1);
-		
 		createDocument(sortString);
-	
 	});
 	
 	function createDocument(sortString){
@@ -195,6 +229,8 @@ jQuery(document).ready(function($){
 		data.afterPost = $("#txtAfterPost").val();
 		data.fileNameCont = $("#txtFileName").val();
 		data.includeImages = $("#chkIncludeImages").is(':checked');
+		data.runShortcodes = $("#chkRunShortcodes").is(':checked');
+		data.convertYoutube = $("#chkConvertYoutube").is(':checked');
 		//data.includeTables = $("#chkIncludeTables").is(':checked');
 		data.headerTitle = $("#txtHeaderTitle").val();
 		data.headerSub = $("#txtHeaderSub").val();
@@ -215,9 +251,7 @@ jQuery(document).ready(function($){
 				pdfList.push(newFileData);
 				buildFileTable();
 			}else{
-				
 				$('#createStatus').html("Error: " + newFileData.status);
-				//$('#createStatus').html(response);
 			}
 		});
 	}
@@ -244,6 +278,19 @@ jQuery(document).ready(function($){
 				}else{
 					$('#chkIncludeImages').attr('checked', false);
 				}
+				
+				if(newValues["runShortcodes"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkRunShortcodes').attr('checked', true);
+				}else{
+					$('#chkRunShortcodes').attr('checked', false);
+				}
+				
+				if(newValues["convertYoutube"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkConvertYoutube').attr('checked', true);
+				}else{
+					$('#chkConvertYoutube').attr('checked', false);
+				}
+				
 			});
 		}
 	});
@@ -270,18 +317,21 @@ jQuery(document).ready(function($){
 			modal: true
 		});
 		
-		//alert("setting dialuge");
-		
 		$('#btnOpenDialog').click(function() {
-			
-			//alert("open dialogue");
-			
 			var sortHTML = '<ul id="sortable">';
 			var pageCount = 0;
 			var l = pageList.length;		   
 			for(var i=0; i<l; i++){
 				if($('#chk' + pageList[i]['ID']).is(':checked')){
 					sortHTML += '<li class="ui-state-default" id="pg_' + pageList[i]['ID'] + '"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' + pageList[i].post_title + '</li>';
+					pageCount++;
+				}
+			}
+	
+			var l = customList.length;		   
+			for(var i=0; i<l; i++){
+				if($('#chk' + customList[i]['ID']).is(':checked')){
+					sortHTML += '<li class="ui-state-default" id="po_' + customList[i]['ID'] + '"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' + customList[i].post_title + '</li>';
 					pageCount++;
 				}
 			}
@@ -306,9 +356,7 @@ jQuery(document).ready(function($){
 				$("#sortable").sortable();
 				$("#sortable").disableSelection();
 			});
-			
-			//alert("open dialogue 2");
-			
+		
 			$('#sortDialog').dialog('open');
 			return false;
 		});
@@ -320,7 +368,6 @@ jQuery(document).ready(function($){
 	
 </script>
 
-
 <h2>PDF Creation Station</h2>
 
 <h3>by Kalin Ringkvist - kalinbooks.com</h3>
@@ -330,31 +377,36 @@ jQuery(document).ready(function($){
 <div class='collapse'><b>Select Pages and Posts</b></div>
 <div class="wideHolder">
     <div class='formDiv'>
-    <button id="btnSelectAllPages">Select All</button><br/><br/>
-    <?php
-        $l = count($pageList);
-        $previousIndent = '';
-        $previousID = 0;
-        for($i=0; $i<$l; $i++){//build our list of pages with checkboxes
-            $pageID = $pageList[$i]->ID;
-            $parent = $pageList[$i]->post_parent;
-            
-            if($parent == 0){//if this is a top level page, don't indent
-                $indent = '';
-            }else{
-                if($parent == $previousID){//if the parent is the previous page, add another three spaces of indentation (if pages are not returned by wordpress in proper order, indentation will fail)"
-                    $indent = $previousIndent .'&nbsp;&nbsp;&nbsp;';
+        <button id="btnSelectAllPages">Select All</button> Pages:<br/><br/>
+        <?php
+            $l = count($pageList);
+			$indent = '';
+            $previousIndent = '';
+            $previousID = 0;
+            for($i=0; $i<$l; $i++){//build our list of pages with checkboxes
+			
+                $pageID = $pageList[$i]->ID;
+                $parent = $pageList[$i]->post_parent;
+				
+				//echo "-----" .$parent ."----";
+                
+                if($parent == 0){//if this is a top level page, don't indent
+                    $indent = '';
+                }else{
+                    if($parent == $previousID){//if the parent is the previous page, add another three spaces of indentation (if pages are not returned by wordpress in proper order, indentation will fail)"
+                        $indent = $previousIndent .'&nbsp;&nbsp;&nbsp;';
+                    }
                 }
+                $previousID = $pageID;
+                $previousIndent = $indent;
+                echo($indent .'<input type=checkbox id="chk' .$pageID .'" name="chk' .$pageID .'"></ input> ' .$pageList[$i]->post_title .'<br />');//create each checkbox and label
             }
-            $previousID = $pageID;
-            $previousIndent = $indent;
-            echo($indent .'<input type=checkbox id="chk' .$pageID .'" name="chk' .$pageID .'"></ input> ' .$pageList[$i]->post_title .'<br />');//create each checkbox and label
-        }
-    ?>
+			
+        ?>
     </div>
 
     <div class="formDiv">
-    	<button id="btnSelectAllPosts">Select All</button><br/><br/>	
+    	<button id="btnSelectAllPosts">Select All</button> Posts:<br/><br/>	
         <?php
             $l = count($postList);
             for($i=0; $i<$l; $i++){//build our list of posts with checkboxes
@@ -362,10 +414,20 @@ jQuery(document).ready(function($){
                 //echo $postList[$i]->post_parent;
                 echo('<input type=checkbox id="chk' .$pageID .'" name="chk' .$pageID .'"></ input> ' .$postList[$i]->post_title .'<br />');
             }
+			
+			$l = count($customList);
+			
+			if($l > 0){//if we have something in our list of custom pages, echo the section then loop to add each one
+				echo "<hr/> Custom types: <br/>";
+				for($i=0; $i<$l; $i++){//build our list of posts with checkboxes
+					$pageID = $customList[$i]->ID;
+					echo('<input type=checkbox id="chk' .$pageID .'" name="chk' .$pageID .'"></ input> ' .$customList[$i]->post_title .'<br />');
+				}
+			}
         ?>
     </div>
-	
 </div>
+
 <div class='collapse'><b>Insert HTML before every page or post</b></div>
    <div class="txtfieldHolder">
         <div class="textAreaDiv">
@@ -404,8 +466,7 @@ jQuery(document).ready(function($){
         <p>Header title: <input type='text' name='txtHeaderTitle' id='txtHeaderTitle' class='txtHeader' value='<?php echo $adminOptions["headerTitle"]; ?>'></input></p>
         <p>Header sub title: <input type='text' name='txtHeaderSub' id='txtHeaderSub' class='txtHeader' value='<?php echo $adminOptions["headerSub"]; ?>'></input></p><br/>
         
-        <p><input type='checkbox' id='chkIncludeImages' name='chkIncludeImages' <?php if($adminOptions["includeImages"] == 'true'){echo "checked='yes' ";} ?>></input> Include Images<!--&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkIncludeTables' name='chkIncludeTables' if($adminOptions["includeTables"] == 'true'){echo "checked='yes' ";} ></input> Include Tables -->&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Content Font Size: <input type="text" id="txtFontSize" size="2" maxlength="3" value='<?php echo $adminOptions["fontSize"]; ?>' />
-</p><br/>
+         <p><input type='checkbox' id='chkIncludeImages' name='chkIncludeImages' <?php if($adminOptions["includeImages"] == "true"){echo "checked='yes' ";} ?>></input> Include Images &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type="text" id="txtFontSize" size="2" maxlength="3" value='<?php echo $adminOptions["fontSize"]; ?>' /> Content font size &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkRunShortcodes' name='chkRunShortcodes' <?php if($adminOptions["runShortcodes"] == "true"){echo "checked='yes' ";} ?>></input> Run other plugin shortcodes&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkConvertYoutube' name='chkConvertYoutube' <?php if($adminOptions["convertYoutube"] == "true"){echo "checked='yes' ";} ?>></input> Convert YouTube</p><br/>
         
         File name: <input type="text" name='txtFileName' id='txtFileName' value='<?php echo $adminOptions["filename"]; ?>' ></input>.pdf
         </p>
@@ -420,7 +481,7 @@ jQuery(document).ready(function($){
     <div class="generalHolder">
     	<b>Blog shortcodes:</b> Use these codes anywhere in the above form to insert information about your blog.
     	<p><ul>
-        <li><b>[current_time]</b> -  PDF creation date/time</li>
+        <li><b>[current_time format="m-d-Y"]</b> -  PDF creation date/time <b>*</b></li>
         <li><b>[blog_name]</b> -  the name of the blog</li>
         <li><b>[blog_description]</b> - description of the blog</li>
         <li><b>[blog_url]</b> - blog base url</li>
@@ -433,18 +494,20 @@ jQuery(document).ready(function($){
         <li><b>[ID]</b> - the ID number of the page/post</li>
         <li><b>[post_author]</b> - author of the page/post</li>
         <li><b>[post_permalink]</b> - the page permalink</li>
-        <li><b>[post_date]</b> - date page/post was created</li>
-        <li><b>[post_date_gmt]</b> - date page/post was created in gmt time</li>
+        <li><b>[post_date format="m-d-Y"]</b> - date page/post was created <b>*</b></li>
+        <li><b>[post_date_gmt format="m-d-Y"]</b> - date page/post was created in gmt time <b>*</b></li>
         <li><b>[post_title]</b> - page/post title</li>
-        <li><b>[post_excerpt]</b> - page/post excerpt</li>
+        <li><b>[post_excerpt length="250"]</b> - page/post excerpt (note the optional character 'length' parameter)</li>
         <li><b>[post_name]</b> - page/post slug name</li>
-        <li><b>[post_modified]</b> - date page/post was last modified</li>
-        <li><b>[post_modified_gmt]</b> - date page/post was last modified in gmt time</li>
+        <li><b>[post_modified format="m-d-Y"]</b> - date page/post was last modified <b>*</b></li>
+        <li><b>[post_modified_gmt format="m-d-Y"]</b> - date page/post was last modified in gmt time <b>*</b></li>
         <li><b>[guid]</b> - url of the page/post</li>
         <li><b>[comment_count]</b> - number of comments posted for this post/page</li>
         </ul></p>
-        <p>Note: these shortcodes only work on this page.</p>
+        <p><b>*</b> Time shortcodes have an optional format parameter. Format your dates using these possible tokens: m=month, M=text month, F=full text month, d=day, D=short text Day Y=4 digit year, y=2 digit year, H=hour, i=minute, s=seconds. More tokens listed here: <a href="http://php.net/manual/en/function.date.php" target="_blank">http://php.net/manual/en/function.date.php.</a> </p>
         
+        <p><b>Note: these shortcodes only work on this page.</b></p>
+        <hr/>
         <p><b>The following tags are supported wherever HTML is allowed (according to TCPDF documentation):</b><br /> a, b, blockquote, br, dd, del, div, dl, dt, em, font, h1, h2, h3, h4, h5, h6, hr, i, img, li, ol, p, pre, small, span, strong, sub, sup, table, tcpdf, td, th, thead, tr, tt, u, ul</p>
         <p>Please use double quotes (") in HTML attributes such as font size or href, due to a bug with single quotes.</p>
     
@@ -452,16 +515,20 @@ jQuery(document).ready(function($){
     <div class='collapse'><b>About</b></div>
     <div class="generalHolder">
     
-    	<p>Thank you for using PDF Creation Station. To report bugs, request help or suggest new features, visit <a href="http://kalinbooks.com/pdf-creation-station/" target="_blank">KalinBooks.com/pdf-creation-station</a>. If you find this plugin useful, please pay it forward to the community.</p>
-        <p>
-        <?php 
-		$versionNum = (int) substr(phpversion(), 0, 1);//check php version and possibly warn user
-		if($versionNum < 5){//I have no idea what this thing will do at anything below 5.2.11 :)
-			echo "<p>You are running PHP version "  .phpversion() .". This plugin was built with PHP version 5.2.11 and has NOT been tested with older versions. It likely requires at least PHP version 5.0.</p>";
-		}
-		?>
-        </p>
-    	<p>PDF Creation Station was built with WordPress version 3.0. It has NOT been tested on older versions and will most likely fail.</p>
+    	<p>Thank you for using PDF Creation Station. To report bugs, request help or suggest features, visit <a href="http://kalinbooks.com/pdf-creation-station/" target="_blank">KalinBooks.com/pdf-creation-station</a>. If you find this plugin useful, please consider making a PayPal donation:</p>
+       
+
+
+<p>
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="C6KPVS6HQRZJS">
+<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="Donate to Kalin Ringkvist's WordPress plugin development.">
+<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
+
+</p><br/>
        
         
         
@@ -472,6 +539,5 @@ jQuery(document).ready(function($){
          
     </div>
     
-    
-    <div id="sortDialog" title="Adjust Order and Create"><div id="sortHolder" class="sortHolder"></div><p align="center"><br /><button id="btnCreateCancel">Cancel</button>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button id="btnCreate">Create PDF!</button></p>
+    <div id="sortDialog" title="Adjust Order and Create"><div id="sortHolder" class="sortHolder"></div><p align="center"><br /><button id="btnCreateCancel">Cancel</button>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button id="btnCreate">Create PDF!</button></p></div>
 </html>

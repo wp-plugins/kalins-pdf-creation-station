@@ -5,10 +5,11 @@
 		exit;
 	}
 	
-	createPDFDir();
+	kalinsPDF_createPDFDir();
 	
 	$save_nonce = wp_create_nonce( 'kalins_pdf_admin_save' );
 	$reset_nonce = wp_create_nonce( 'kalins_pdf_admin_reset' );
+	$create_nonce = wp_create_nonce( 'kalins_pdf_create_all' );
 	
 	$adminOptions = kalins_pdf_get_admin_options();
 ?>
@@ -20,6 +21,7 @@ jQuery(document).ready(function($){
 	
 	var saveNonce = '<?php echo $save_nonce; //pass a different nonce security string for each possible ajax action?>'
 	var resetNonce = '<?php echo $reset_nonce; ?>'
+	var createAllNonce = '<?php echo $create_nonce; ?>'
 
 	
 	$('#btnReset').click(function(){
@@ -57,10 +59,40 @@ jQuery(document).ready(function($){
 				$("input[name='kalinsPDFLink']").val(newValues["showLink"]);//set link radio button option
 				$("#opt_" + newValues["showLink"]).attr("checked", "checked"); 
 				
+				if(newValues["filenameByTitle"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkFilenameByTitle').attr('checked', true);
+				}else{
+					$('#chkFilenameByTitle').attr('checked', false);
+				}
+				
+				if(newValues["showOnMulti"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkShowOnMulti').attr('checked', true);
+				}else{
+					$('#chkShowOnMulti').attr('checked', false);
+				}
+				
 				if(newValues["doCleanup"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
 					$('#chkDoCleanup').attr('checked', true);
 				}else{
 					$('#chkDoCleanup').attr('checked', false);
+				}
+				
+				if(newValues["autoGenerate"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkAutoGenerate').attr('checked', true);
+				}else{
+					$('#chkAutoGenerate').attr('checked', false);
+				}
+				
+				if(newValues["runShortcodes"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkRunShortcodes').attr('checked', true);
+				}else{
+					$('#chkRunShortcodes').attr('checked', false);
+				}
+				
+				if(newValues["convertYoutube"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkConvertYoutube').attr('checked', true);
+				}else{
+					$('#chkConvertYoutube').attr('checked', false);
 				}
 			});
 		}
@@ -85,15 +117,19 @@ jQuery(document).ready(function($){
 		data.afterLink = $("#txtAfterLink").val();
 		data.fontSize = $("#txtFontSize").val();
 		data.includeImages = $("#chkIncludeImages").is(':checked');
+		data.runShortcodes = $("#chkRunShortcodes").is(':checked');
+		data.convertYoutube = $("#chkConvertYoutube").is(':checked');
 		//data.includeTables = $("#chkIncludeTables").is(':checked');
 		data.showLink = $("input[name='kalinsPDFLink']:checked").val();
 		data.wordCount = $("#txtWordCount").val();
-		
 		data.showOnMulti = $("#chkShowOnMulti").is(':checked');
+		data.filenameByTitle = $("#chkFilenameByTitle").is(':checked');//chkAutoGenerate
 		
-		data.filenameByTitle = $("#chkFilenameByTitle").is(':checked');
+		data.autoGenerate = $("#chkAutoGenerate").is(':checked');
 		
 		data.doCleanup =  $("#chkDoCleanup").is(':checked');
+		
+		//alert(data.showLink + "showLink");
 		
 		$('#createStatus').html("Saving settings...");
 
@@ -110,6 +146,53 @@ jQuery(document).ready(function($){
 			}
 		});
 	});
+	
+	
+	
+	
+	
+	
+	$('#btnCreateAll').click(function(){
+		callCreateAll();
+	});
+	
+	var creationInProcess = false;
+	
+	function callCreateAll(){
+		var data = { action: 'kalins_pdf_create_all',
+			_ajax_nonce : createAllNonce
+		}
+		
+		if(!creationInProcess){
+			$('#createStatus').html("Creating PDF files for all pages and posts.");
+		}
+
+		// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
+		jQuery.post(ajaxurl, data, function(response) {
+			var startPosition = response.indexOf("{");
+			var responseObjString = response.substr(startPosition, response.lastIndexOf("}") - startPosition + 1);
+			
+			var newFileData = JSON.parse(responseObjString);
+			if(newFileData.status == "success"){
+				
+				if(newFileData.existCount >= newFileData.totalCount){
+					$('#createStatus').html(newFileData.totalCount  +  " PDF files successfully cached.");
+					creationInProcess = false;
+				}else{
+					$('#createStatus').html(newFileData.existCount + " out of " + newFileData.totalCount  +  " PDF files cached. Now building the next " +  newFileData.createCount + ".");
+					//setTimeout(callCreateAll, 2000);
+					creationInProcess = true;
+					callCreateAll();
+				}
+			}else{
+				$('#createStatus').html(response);
+			}
+		});
+	}
+	
+	
+	
+	
 	
 	function toggleWidgets() {//make menus collapsible
 		$('.collapse').addClass('plus');
@@ -174,7 +257,7 @@ jQuery(document).ready(function($){
         <p>Before Link: <input type="text" id='txtBeforeLink' class='txtHeader' value='<?php echo $adminOptions["beforeLink"]; ?>' /></p>
         <p>After Link: <input type="text" id='txtAfterLink' class='txtHeader' value='<?php echo $adminOptions["afterLink"]; ?>' /></p>
         <br/>
-        <p><input type='checkbox' id='chkIncludeImages' name='chkIncludeImages' <?php if($adminOptions["includeImages"] == "true"){echo "checked='yes' ";} ?>></input> Include Images &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; Content Font Size: <input type="text" id="txtFontSize" size="2" maxlength="3" value='<?php echo $adminOptions["fontSize"]; ?>' /></p>
+        <p><input type='checkbox' id='chkIncludeImages' name='chkIncludeImages' <?php if($adminOptions["includeImages"] == "true"){echo "checked='yes' ";} ?>></input> Include Images &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type="text" id="txtFontSize" size="2" maxlength="3" value='<?php echo $adminOptions["fontSize"]; ?>' /> Content font size &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkRunShortcodes' name='chkRunShortcodes' <?php if($adminOptions["runShortcodes"] == "true"){echo "checked='yes' ";} ?>></input> Run other plugin shortcodes&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkConvertYoutube' name='chkConvertYoutube' <?php if($adminOptions["convertYoutube"] == "true"){echo "checked='yes' ";} ?>></input> Convert YouTube</p>
         <br/>
         
         <p>Default Link Placement (can be overwritten in page/post edit page):</p>
@@ -194,43 +277,48 @@ jQuery(document).ready(function($){
 		}
 		?>
         <p>
-        <input type="text" id="txtWordCount" size="3" maxlength="5" value='<?php echo $adminOptions["wordCount"]; ?>' /> Minimum post character count (0 = no limit)
+        <input type="text" id="txtWordCount" size="3" maxlength="5" value='<?php echo $adminOptions["wordCount"]; ?>' /> Minimum post word count
         </p><br/>
         
         <p><input type='checkbox' id='chkFilenameByTitle' name='chkFilenameByTitle' <?php if($adminOptions["filenameByTitle"] == "true"){echo "checked='yes' ";} ?>></input> Use post slug for PDF filename instead of ID</p>
         
-        <p><input type='checkbox' id='chkShowOnMulti' name='chkShowOnMulti' <?php if($adminOptions["showOnMulti"] == "true"){echo "checked='yes' ";} ?>></input> Show on home, category, tag and search pages (does not work if you use excerpts on any of these pages)</p><br/>
+        <p><input type='checkbox' id='chkShowOnMulti' name='chkShowOnMulti' <?php if($adminOptions["showOnMulti"] == "true"){echo "checked='yes' ";} ?>></input> Show on home, category, tag and search pages (does not work if you use excerpts on any of these pages)</p>
+        
+        <p><input type='checkbox' id='chkAutoGenerate' name='chkAutoGenerate' <?php if($adminOptions["autoGenerate"] == "true"){echo "checked='yes' ";} ?>></input> Automatically generate PDFs on publish and update</p><br/>
         
         <p><!--&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkIncludeTables' name='chkIncludeTables' if($adminOptions["includeTables"] == 'true'){echo "checked='yes' ";} ></input> Include Tables --></p>
         
 </p>
 <p align="center"><br />
-        <button id="btnSave">Save Settings</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type='button' id='btnReset'>Reset Defaults</button></p>
+        <button id="btnSave">Save Settings</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type='button' id='btnReset'>Reset Defaults</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type='button' id='btnCreateAll'>Create All</button></p>
         <p align="center"><span id="createStatus">&nbsp;</span></p>
     </div>
     
     <div class='collapse'><b>Shortcodes</b></div>
     <div class="generalHolder">
-    	<b>Blog shortcodes:</b> Use these codes anywhere in the above form to insert information about your blog.
+    	<b>shortcodes:</b> Use these codes anywhere in the above form to insert blog or page information.
     	<p><ul>
-        <li><b>[current_time]</b> -  PDF creation date/time</li>
+        <li><b>[current_time format="m-d-Y"]</b> -  PDF creation date/time <b>*</b></li>
         <li><b>[blog_name]</b> -  the name of the blog</li>
         <li><b>[blog_description]</b> - description of the blog</li>
         <li><b>[blog_url]</b> - blog base url</li>
         <li><b>[ID]</b> - the ID number of the page/post</li>
         <li><b>[post_author]</b> - author of the page/post</li>
         <li><b>[post_permalink]</b> - the page permalink</li>
-        <li><b>[post_date]</b> - date page/post was created</li>
-        <li><b>[post_date_gmt]</b> - date page/post was created in gmt time</li>
+        <li><b>[post_date format="m-d-Y"]</b> - date page/post was created <b>*</b></li>
+        <li><b>[post_date_gmt format="d-m-Y"]</b> - date page/post was created in gmt time <b>*</b></li>
         <li><b>[post_title]</b> - page/post title</li>
-        <li><b>[post_excerpt]</b> - page/post excerpt</li>
+        <li><b>[post_excerpt length="250"]</b> - page/post excerpt (note the optional character 'length' parameter)</li>
         <li><b>[post_name]</b> - page/post slug name</li>
-        <li><b>[post_modified]</b> - date page/post was last modified</li>
-        <li><b>[post_modified_gmt]</b> - date page/post was last modified in gmt time</li>
+        <li><b>[post_modified format="m-d-Y"]</b> - date page/post was last modified <b>*</b></li>
+        <li><b>[post_modified_gmt format="m-d-Y"]</b> - date page/post was last modified in gmt time <b>*</b></li>
         <li><b>[guid]</b> - url of the page/post</li>
         <li><b>[comment_count]</b> - number of comments posted for this post/page</li>
         </ul></p>
-        <p>Note: these shortcodes only work on this page.</p>
+        <p><b>*</b> Time shortcodes have an optional format parameter. Format your dates using these possible tokens: m=month, M=text month, F=full text month, d=day, D=short text Day Y=4 digit year, y=2 digit year, H=hour, i=minute, s=seconds. More tokens listed here: <a href="http://php.net/manual/en/function.date.php" target="_blank">http://php.net/manual/en/function.date.php.</a> </p>
+        
+        <p><b>Note: these shortcodes only work on this page.</b></p>
+        <hr/>
         
         <p><b>The following tags are supported wherever HTML is allowed (according to TCPDF documentation):</b><br /> a, b, blockquote, br, dd, del, div, dl, dt, em, font, h1, h2, h3, h4, h5, h6, hr, i, img, li, ol, p, pre, small, span, strong, sub, sup, table, tcpdf, td, th, thead, tr, tt, u, ul</p>
         <p>Please use double quotes (") in HTML attributes such as font size or href, due to a bug with single quotes.</p>
@@ -239,16 +327,22 @@ jQuery(document).ready(function($){
     <div class='collapse'><b>About</b></div>
     <div class="generalHolder">
     
-    	<p>Thank you for using PDF Creation Station. To report bugs, request help or suggest new features, visit <a href="http://kalinbooks.com/pdf-creation-station/" target="_blank">KalinBooks.com/pdf-creation-station</a>. If you find this plugin useful, please pay it forward to the community.</p>
-        <p>
-        <?php 
-		$versionNum = (int) substr(phpversion(), 0, 1);//check php version and possibly warn user
-		if($versionNum < 5){//I have no idea what this thing will do at anything below 5.2.11 :)
-			echo "<p>You are running PHP version "  .phpversion() .". This plugin was built with PHP version 5.2.11 and has NOT been tested with older versions. It likely requires at least PHP version 5.0.</p>";
-		}
-		?>
-        </p>
-    	<p>PDF Creation Station was built with WordPress version 3.0. It has NOT been tested on older versions and will most likely fail.</p>
+    	<p>Thank you for using PDF Creation Station. To report bugs, request help or suggest features, visit <a href="http://kalinbooks.com/pdf-creation-station/" target="_blank">KalinBooks.com/pdf-creation-station</a>. If you find this plugin useful, please consider making a PayPal donation:</p>
+       
+
+
+<p>
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="C6KPVS6HQRZJS">
+<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="Donate to Kalin Ringkvist's WordPress plugin development.">
+<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
+
+</p><br/>
+        
+        
         <p><input type='checkbox' id='chkDoCleanup' name='chkDoCleanup' <?php if($adminOptions["doCleanup"] == "true"){echo "checked='yes' ";} ?>></input> Upon plugin deactivation clean up all database entries</p>
         
         

@@ -3,11 +3,15 @@
 
 $outputVar = new stdClass();
 
-$isSingle = isset($_GET["singlepost"]);
+if(!isset($isSingle)){
+	$isSingle = isset($_GET["singlepost"]);
+}
 
 try{
-	if($isSingle){//guess I don't know enough about PHP to understand why this page thinks its in a different location in relation to wp-config depending on how its called... but somehow always knows how to get tcpdf
+	if($isSingle && !isset($pageIDs)){//guess I don't know enough about PHP to understand why this page thinks its in a different location in relation to wp-config depending on how its called... but somehow always knows how to get tcpdf
 		require_once("../../../wp-config.php");
+	}else{
+		//require_once("../wp-config.php");
 	}
 	
 	require_once('tcpdf/config/lang/eng.php');
@@ -17,57 +21,53 @@ try{
 	echo json_encode($outputVar);
 }
 
-createPDFDir();
-
-/*
-try{
-	ob_end_clean();
-} catch (Exception $e) {
-	$outputVar->status = "problem with ob_end_clean.";
-	echo json_encode($outputVar);
-	return;
-}
-*/
+kalinsPDF_createPDFDir();
 
 global $wpdb, $post;
 
-$uploads = wp_upload_dir();
-$uploadDir = $uploads['basedir'];
-$uploadURL = $uploads['baseurl'];
+//$uploads = wp_upload_dir();
+//$uploadDir = $uploads['basedir'];
+//$uploadURL = $uploads['baseurl'];
 
 $adminOptions = kalins_pdf_get_admin_options();
 
 if($isSingle){
-	$singleID = substr($_GET["singlepost"], 3);
-	$pdfDir = $uploadDir .'/kalins-pdf/singles/';
-	$pdfURL = $uploadURL .'/kalins-pdf/singles/';
+	if(!isset($pageIDs)){
+		$pageIDs = $_GET["singlepost"];
+	}
+	
+	$singleID = substr($pageIDs, 3);
+
+	$pdfDir = KALINS_PDF_SINGLES_DIR;
+	//$pdfURL = $uploadURL .'/kalins-pdf/singles/';
+	$pdfURL = KALINS_PDF_SINGLES_URL;
 	
 	if($adminOptions["filenameByTitle"] == "true"){
 		
 		$singlePost = "";
 		
-		if(substr($_GET["singlepost"], 0, 2) == "po"){
+		//echo "My page ids " .$pageIDs;
+		
+		if(substr($pageIDs, 0, 2) == "po"){
 			$singlePost = get_post($singleID);
 		}else{
 			$singlePost = get_page($singleID);
 		}
 		
-		
 		$fileName = $singlePost->post_name .'.pdf'; 
 		
-		//$fileName = $singleID .'.pdf'; 
 	}else{
 		$fileName = $singleID .'.pdf';
 	}
 	
 	if(file_exists($pdfDir .$fileName)){//if the file already exists, simply redirect to that file and we're done
-		header("Location: " .$pdfURL .$fileName);//for some reason pdfDir doesn't work here so we use pdfURL
+		if(!isset($skipReturn)){
+			header("Location: " .$pdfURL .$fileName);
+		}
 		return;
 	}else{
 		$outputVar->fileName = $fileName;
 		$outputVar->date = date("Y-m-d H:i:s", time());
-		
-		$pageIDs = $_GET["singlepost"];
 		
 		$adminOptions = kalins_pdf_get_admin_options();//for individual pages/posts we grab all the PDF options from the options page instead of the POST
 		
@@ -80,12 +80,18 @@ if($isSingle){
 		$headerTitle = $adminOptions["headerTitle"];
 		$headerSub = $adminOptions["headerSub"];
 		$includeImages = $adminOptions["includeImages"];
+		$runShortcodes = $adminOptions["runShortcodes"];
+		$convertYoutube = $adminOptions["convertYoutube"];
 		//$includeTables = $adminOptions["includeTables"];
 		$fontSize = $adminOptions["fontSize"];
 	}
 }else{
 	try{
-		$pdfDir = $uploadDir .'/kalins-pdf/';
+		//$pdfDir = $uploadDir .'/kalins-pdf/';
+		
+		$pdfDir = KALINS_PDF_DIR;
+		
+		//echo $pdfDir ." pdf dir!!" .KALINS_PDF_DIR;
 		
 		if($_POST["fileNameCont"] != ""){
 			$fileName = kalins_pdf_global_shortcode_replace($_POST["fileNameCont"]) .".pdf";
@@ -93,7 +99,7 @@ if($isSingle){
 			$fileName = time() .".pdf";
 		}
 		
-		$documentType = "html";
+		//$documentType = "html";
 		$pageIDs = stripslashes($_POST["pageIDs"]);
 		$titlePage = stripslashes($_POST['titlePage']);
 		$finalPage = stripslashes($_POST['finalPage']);
@@ -103,8 +109,10 @@ if($isSingle){
 		$afterPost = stripslashes($_POST['afterPost']);
 		$headerTitle = stripslashes($_POST['headerTitle']);
 		$headerSub = stripslashes($_POST['headerSub']);
-		$headerKeyWords = "list, of, keywords,";
+		//$headerKeyWords = "list, of, keywords,";
 		$includeImages = stripslashes($_POST['includeImages']);
+		$runShortcodes = stripslashes($_POST["runShortcodes"]);
+		$convertYoutube = stripslashes($_POST["convertYoutube"]);
 		//$includeTables = stripslashes($_POST['includeTables']);
 		$fontSize = (int) $_POST['fontSize'];
 		
@@ -114,6 +122,8 @@ if($isSingle){
 		$kalinsPDFToolOptions["headerSub"] = $headerSub;
 		$kalinsPDFToolOptions["filename"] = $_POST["fileNameCont"];
 		$kalinsPDFToolOptions["includeImages"] = $includeImages;
+		$kalinsPDFToolOptions["runShortcodes"] = $runShortcodes;
+		$kalinsPDFToolOptions["convertYoutube"] = $convertYoutube;
 		//$kalinsPDFToolOptions["includeTables"] = $includeTables;
 		$kalinsPDFToolOptions["beforePage"] = $beforePage;
 		$kalinsPDFToolOptions["beforePost"] = $beforePost;
@@ -138,8 +148,6 @@ if($isSingle){
 		$outputVar->date = date("Y-m-d H:i:s", time());
 	}
 }
-
-
 
 $result = array ();
 
@@ -221,7 +229,21 @@ try{
 		
 		$objPost = $result[$i];
 		
+		$post = $objPost;//set global post object so if other plugins run their shortcodes they'll have access to it
+		
 		$content = $objPost->post_content;
+		
+		if($convertYoutube == "true"){
+			$content = ereg_replace("<object(.*)youtube.com/v/(.*)\"(.*)</object>", '<p><a href="http://www.youtube.com/watch?v=\\2">YouTube Video</a></p>', $content);
+		}
+		
+		if($runShortcodes == "true"){//if we're running shortcodes, run them
+			$content = do_shortcode($content);
+		}else{
+			$content = strip_shortcodes($content);//if not, remove them
+		}
+		
+		//$content = apply_filters('the_content', $content);
 		
 		if(preg_match('/\[caption +[^\]]*\]/', $content)){//remove all captions surrounding images and whatnot since tcpdf can't interpret them (but leave the images in place)
 			$content = preg_replace('/\[caption +[^\]]*\]/', '', $content);//replace all instances of the opening caption tag
@@ -235,49 +257,13 @@ try{
 			}
 		}
 		
-		//echo "-------------" .$content ."-----------------";
-		
-		//echo $content;
-		
-		//if($includeTables != "true"){//TABLE REMOVAL STILL NEEDS TO BE TESTED... err actually coded I mean!!!!!!!
-			/*$content = preg_replace("/^<table(?:.*?)>(.*?)</table>$/", '', $content);*/
-			/*$content = preg_replace("/^<table.*?>^/", '', $content);*/
-			/*$content = preg_replace('/^[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+\.[a-zA-Z.]{2,5}$/', '', $content);*/
-			/*$content = preg_replace('/<table[^>]<\/table>/', '', $content);*/
+		if(preg_match('/< *blockquote *>/', $content)){//if we've got instances of <blockquote> in this content
+			$content = preg_replace('/< *blockquote *>/', '<table border="0"><tr nobr="true"><td width="20">&nbsp;</td><td width="450"><pre>', $content);//replace it with a simple table
+			$content = preg_replace('/< *\/ *blockquote *>/', '</pre></td></tr></table><br/>', $content);//now replace the closing tag
 			
-			/*if(preg_match('/<table[^>]*./', $content)){
-				echo "matched";
-			
-				
-				$dom= new DOMDocument($content);
-				//$dom->load($content);
-				
-				$dom->preserveWhiteSpace = false;
-				$fullPage = $dom->documentElement;
-				
-				echo $dom->saveHTML();
-				
-				$domTable = $fullPage->getElementsByTagName("table");
-				
-				foreach ($domTable as $tables){
-					echo DOMinnerHTML($tables);
-					$fullPage = $fullPage->removeChild($tables);
-				} 
-				$content = (string) $fullPage;
-				
-			}else{
-				echo "--";
-			}
-		}*/
-		
-		/*if($objPost->ID == 80){
-			echo $content;
-		}*/
-		
-		//$content = str_replace("\n", "", $content);//my attempt at replacing double line spaces between paragraphs with singles - damn tcpdf won't render a line break properly
-		//$content = str_replace('\r', '', str_replace('\n', '', $content));
-		//$content = ereg_replace("[\n\r]", "", $content);
-		//$content = ereg_replace("\t\t+", "", $content);
+			//$content = preg_replace('/< *blockquote *>/', 'WTFFFFFFFFF--------', $content);//replace it with a simple table
+			//$content = preg_replace('/< *\/ *blockquote *>/', 'AAAAAAAAAAAAAA-------', $content);//now replace the closing tag
+		}
 		
 		if($objPost->post_type == "page"){//insert appropriate html before and after every page and post
 			$content = $beforePage .$content .$afterPage;
@@ -286,9 +272,6 @@ try{
 		}
 		
 		$content = kalins_pdf_page_shortcode_replace($content, $objPost);
-		
-		/*$pos = strpos($content, '<table');//not sure what this is doing; looks like we skip the whole page if it contains a table
-		if ($pos == true) continue;*/
 		
 		// add a page
 		$objTcpdf->AddPage();
@@ -340,11 +323,12 @@ try{
 
 $outputVar->status = "success";//set success status for output to AJAX
 
-
-if($isSingle){//if this is called from a page/post we redirect so that user can download pdf directly
-	header("Location: " .$pdfURL .$fileName);
-}else{
-	echo json_encode($outputVar);//if it's called from the creation station admin panel we output the result object to AJAX
+if(!isset($skipReturn)){
+	if($isSingle){//if this is called from a page/post we redirect so that user can download pdf directly
+		header("Location: " .$pdfURL .$fileName);
+	}else{
+		echo json_encode($outputVar);//if it's called from the creation station admin panel we output the result object to AJAX
+	}
 }
 
 ?>

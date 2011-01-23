@@ -1,8 +1,10 @@
 <p>  
 	<b>PDF Creation Station</b> can add links in pages or posts allowing users to download PDF files of those pages. Here you can adjust settings for those links and PDF files.</p>
-    <p>If you are looking for the utility to create PDF files from multiple pages and posts, you can find it under the Tools menu to the left.</p>
+    <p>for more information, visit <a href="http://kalinbooks.com/pdf-creation-station">KalinBooks.com/pdf-creation-station</a></p>
+<p>If you are looking for the utility to create PDF files from multiple pages and posts, you can find it under the Tools menu to the left.</p>
     
-    <ul>
+    
+<ul>
     	<li>
         	<b>Insert HTML:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
             You may customize many aspects of the generated PDF files by inserting text or HTML snippets into the first six text fields on this page. The HTML will be rendered and saved into the PDF file. If you do not know HTML, you can simply leave the default HTML as is, which will give you a standard title header with the post title, author, date and link.
@@ -32,20 +34,24 @@
                 <li><b>Run other plugin shortcodes:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
                 Select whether or not you want other plugins to run their shortcode functions on the content before PDF generation. If not selected, shortcodes will be removed from the content. Not guaranteed to look pretty for all plugins.
                 </li>
+                <li><b>Convert YouTube videos:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
+                Select this to convert any YouTube videos in your pages/posts into a link to the YouTube page, since we can't embed a video in the PDF. If not selected, videos will be removed.
+                </li>
                 <li><b>Default Link Placement:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
                 Choose where on the blog page you would like the PDF link displayed: top, bottom, or not at all. This setting can be overridden on the individual page/post edit pages, allowing you to create PDF files for some pages and not for others. For pages/posts saved before the installation of PDF Creation Station, the links will be displayed according to the default you set here.
                 </li>
                 <li><b>Minimum Post Character Count</b><br />&nbsp;&nbsp;&nbsp;&nbsp;
                 Set the minimum number of characters a page/post can have before it receives a PDF link. Note: This feature is not perfect. For the sake of efficiency, the script does not discriminate between HTML and actual text, so a YouTube video, for example, may count as several hundred characters. Settings on the individual page/post edit screen will override this value if it becomes an issue on certain pages.
                 </li>
-                
-                
                 <li><b>Use post slug for PDF filename</b><br />&nbsp;&nbsp;&nbsp;&nbsp;
                 Check this to use post slugs for filenames instead of ID numbers. I was originally worried this would create conflicts, but it appears as though WordPress forces all slugs to be unique.
                 </li>
-                
                 <li><b>Show on home, category and tag pages</b><br />&nbsp;&nbsp;&nbsp;&nbsp;
-                Check this only if you are using the entire post content on all these pages. If you use excerpts, the link will still be applied but will be stripped of it's HTML, making the excerpt rather ugly. Your theme normally handles the loop on these pages so I can't figure out a way to allow a plugin to have reliable control over the display on these pages. However, if you know a little about themes and PHP, it should be relatively easy to hack your theme to show the link on these pages. I wrote a blog post explaining how to do this.
+                Check this only if you are using the entire post content on all these pages. If you use excerpts, the link will still be applied but will be stripped of it's HTML, making the excerpt rather ugly. Your theme normally handles the loop on these pages so I can't figure out a way to allow a plugin to have reliable control over the display on these pages. However, if you know a little about themes and PHP, it should be relatively easy to hack your theme to show the link on these pages. I wrote a <a href="http://kalinbooks.com/2010/pdf-creation-station-hard-code-link/">blog post</a> that should help.
+                </li>
+                
+                <li><b>Automatically generate PDFs on publish and update</b><br />&nbsp;&nbsp;&nbsp;&nbsp;
+                Select this option if you want the PDF to be automatically generated when the page/post is published/updated instead of waiting until someone clicks on the link in the page. This will ensure you have a complete set of PDFs for all pages and posts. Note that this will create PDFs even for pages/posts that do not have a PDF link. PDFs are located in the uploads/kalins-pdf/singles folder.
                 </li>
                 
                 
@@ -55,13 +61,17 @@
                 <li><b>Reset Defaults:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
                 Reset all your form values back to the originals that shipped with the plugin.
                 </li>
+                <li><b>Create All:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
+                This button will build a PDF for every page/post on your site, including ones without a PDF link, and include them in the uploads/kalins-pdf/singles folder so that all PDFs are cached and ready to go for viewing or archiving. Normally this button isn't necessary unless you have a specific reason to need all your PDFs pre-generated. Beware that all PDFs are deleted when you save settings so you will need to run this again. Also, PDFs created this way will still be deleted when a post is updated unless "Automatically generate PDFs on publish and update" is selected.
+                </li>
             </ol>
-            
       </li>
         <br/>
         <li>
         	<b>Shortcodes:</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
            Shortcodes are snippets of text starting with "[" and ending with "]" that will be automatically replaced with the appropriate information. You may insert these codes into any fields on this page to be replaced with information like blog name, post title, author, date, etc.<br/>&nbsp;&nbsp;&nbsp;&nbsp;
+           The date/time shortcodes all have an optional format parameter allowing you to format the date/time very specifically using tokens such as: m=month, M=text month, F=full text month, d=day, D=short text Day Y=4 digit year, y=2 digit year, H=hour, i=minute, s=seconds. For a full list of options look at the format parameters section of this page: <a href="http://php.net/manual/en/function.date.php" target="_blank">http://php.net/manual/en/function.date.php.</a>
+           <br/>&nbsp;&nbsp;&nbsp;&nbsp;
            <b>Note:</b> these shortcodes are not entered into the main WordPress shortcode system, so they will only work within the PDF Creation Station plugin.
         </li>
         
@@ -71,18 +81,42 @@
         At the bottom of this page is a little checkbox labeled "Upon plugin deactivation clean up all database entries." This applies to this page, the tool page and the page/post meta. Un-check this only if you plan on deactivating this plugin and want to be able to turn it back on later without all the settings reverting to their defaults.
         </li>
         
-        <br/>
-        <li>
-        <b>Hard-code link into theme</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
-        If you would like to add the PDF link directly into your theme, follow the instructions in <a href="http://kalinbooks.com/pdf-creation-station-hard-code-link/">this blog post.</a> This will give you more flexibility on where in the page to display the link and will also use fewer server resources. Requires some HTML knowledge (naturally you need to be able to understand your theme) and requires one very minor change to a plugin file.
-        </li>
+       
         
         
         <br/>
         <li>
         	<b>Notes about Caching:</b><br/>
         	&nbsp;&nbsp;&nbsp;&nbsp;
-        	To minimize server CPU usage, PDF files are cached within uploads/kalins-pdf/singles/. When a user clicks on a link to a PDF file, the script will first check if the file exists, and if so, it will redirect the user. If there is no file, a brand new PDF will be generated. This means the first person to click the link will experience a slightly longer delay. Individual cached PDF files will be automatically deleted whenever a page or post is updated, ensuring that the files are always up-to-date. All the cached files will be deleted whenever you update or reset the settings on this page.
+        	To minimize server CPU usage, PDF files are cached within uploads/kalins-pdf/singles/. To change this directory, refer to <a href="http://kalinbooks.com/2011/change-default-pdf-directory">this blog post.</a> (Requires a little PHP hacking.) When a user clicks on a link to a PDF file, the script will first check if the file exists, and if so, it will redirect the user. If there is no file, a brand new PDF will be generated. This means the first person to click the link will experience a slightly longer delay. Individual cached PDF files will be automatically deleted whenever a page or post is updated, ensuring that the files are always up-to-date. All the cached files will be deleted whenever you change the settings on this page. 
+        </li>
+         <br/>
+        <li>
+        <b>Hard-code link into theme</b><br/>&nbsp;&nbsp;&nbsp;&nbsp;
+        If you would like to add the PDF link directly into your theme, follow the instructions in <a href="http://kalinbooks.com/2010/pdf-creation-station-hard-code-link/">this blog post.</a> This will give you more flexibility on where in the page to display the link and will also use fewer server resources. Requires some HTML knowledge (naturally you need to be able to understand your theme) and requires one very minor change to a plugin file.  
+        </li>
+        <br/>
+  <li> <b>File Locations</b><br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    PDF files are saved into the uploads directory in the kalins-pdf/singles folder. You will need to delete this directory manually if you wish to remove it. To change this directory, refer to <a href="http://kalinbooks.com/2011/change-default-pdf-directory">this blog post.</a> (Requires a little PHP hacking.) 
+  </li>
+  <br/>
+    <li>
+      <b>wp-config in non-standard location?</b><br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      Refer to this <a href="http://kalinbooks.com/2010/creation-station-non-standard-location/">blog post</a> if your wp-config.php is in a non-standard location.
+    </li>
+        <br/>
+        <li>
+        	<b>Foreign Characters? Want to change a font?</b><br/>
+        	&nbsp;&nbsp;&nbsp;&nbsp;
+        	Refer to this <a href="http://kalinbooks.com/2010/foreign-characters-pdf-creation-station/">blog post</a> if you are having problems with foreign characters or otherwise wish to change the default font of the generated PDF files.
+        </li>
+        <br/>
+        <li>
+        	<b>BlockQuote customization</b><br/>
+        	&nbsp;&nbsp;&nbsp;&nbsp;
+        	Refer to this <a href="http://kalinbooks.com/2010/fix-blockquotes-in-tcpdf-and-adjust-blockquotes-in-pdf-creation-station/">blog post</a> if you would like to adjust the appearance of blockquotes within the generated PDF files.
         </li>
     </ul>
 </p>
