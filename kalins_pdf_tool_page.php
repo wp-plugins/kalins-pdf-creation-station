@@ -515,7 +515,7 @@ jQuery(document).ready(function($){
     <div class='collapse'><b>About</b></div>
     <div class="generalHolder">
     
-    	<p>Thank you for using PDF Creation Station. To report bugs, request help or suggest features, visit <a href="http://kalinbooks.com/pdf-creation-station/" target="_blank">KalinBooks.com/pdf-creation-station</a>. If you find this plugin useful, please consider making a PayPal donation:</p>
+    	<p>Thank you for using PDF Creation Station. To report bugs, request help or suggest features, visit <a href="http://kalinbooks.com/pdf-creation-station/" target="_blank">KalinBooks.com/pdf-creation-station</a>. If you find this plugin useful, please consider <A href="http://wordpress.org/extend/plugins/kalins-pdf-creation-station/">rating this plugin on WordPress.org</A> or making a PayPal donation:</p>
        
 
 
@@ -529,6 +529,10 @@ jQuery(document).ready(function($){
 </form>
 
 </p><br/>
+
+<p>
+If youhttp://wordpress.org/extend/plugins/kalins-pdf-creation-station/
+</p>
        
         
         
