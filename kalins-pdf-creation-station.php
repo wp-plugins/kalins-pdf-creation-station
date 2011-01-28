@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Kalin's PDF Creation Station
-Version: 2.0
+Version: 2.0.1
 Plugin URI: http://kalinbooks.com/pdf-creation-station/
 Description: Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 Author: Kalin Ringkvist
@@ -92,7 +92,9 @@ function kalins_pdf_admin_init(){
 	add_action('wp_ajax_kalins_pdf_admin_save', 'kalins_pdf_admin_save');
 	add_action('wp_ajax_kalins_pdf_create_all', 'kalins_pdf_create_all');
 	
-	add_action('contextual_help', 'kalins_pdf_contextual_help', 10, 2);
+	//add_action('contextual_help', 'kalins_pdf_contextual_help', 10, 2);
+	
+	
 	
 	register_deactivation_hook( __FILE__, 'kalins_pdf_cleanup' );
 	
@@ -113,17 +115,22 @@ function kalins_pdf_admin_init(){
 
 function kalins_pdf_configure_pages() {
 	
-	$mypage = add_submenu_page('options-general.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalins_pdf_admin_page');
+	global $kPDFadminPage;
 	
-	$mytool = add_submenu_page('tools.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalins_pdf_tool_page');
+	$kPDFadminPage = add_submenu_page('options-general.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalins_pdf_admin_page');
 	
-	//echo "config pages";
+	global $kPDFtoolPage;
 	
-	add_action( "admin_print_scripts-$mypage", 'kalins_pdf_admin_head' );
-	add_action('admin_print_styles-' . $mypage, 'kalins_pdf_admin_styles');
+	$kPDFtoolPage = add_submenu_page('tools.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalins_pdf_tool_page');
 	
-	add_action( "admin_print_scripts-$mytool", 'kalins_pdf_admin_head' );
-	add_action('admin_print_styles-' . $mytool, 'kalins_pdf_admin_styles');
+	
+	add_action( "admin_print_scripts-$kPDFadminPage", 'kalins_pdf_admin_head' );
+	add_action('admin_print_styles-' . $kPDFadminPage, 'kalins_pdf_admin_styles');
+	
+	add_action( "admin_print_scripts-$kPDFtoolPage", 'kalins_pdf_admin_head' );
+	add_action('admin_print_styles-' . $kPDFtoolPage, 'kalins_pdf_admin_styles');
+	
+	add_filter('contextual_help', 'kalins_pdf_contextual_help', 10, 3);
 }
 
 function kalins_pdf_admin_head() {
@@ -244,8 +251,6 @@ function kalinsPDF_publish_post( $post_id ){
 
 function kalinsPDF_content_filter($content){
 	
-	
-	
 	$adminOptions = kalins_pdf_get_admin_options();
 	
 	if($adminOptions['showOnMulti'] == "false" && !is_single() && !is_page()){//if we're not on a single page/post we don't need to do anything else
@@ -302,7 +307,7 @@ function kalinsPDF_content_filter($content){
 	}
 }
 
-function kalins_pdf_contextual_help($text, $screen) {
+/*function kalins_pdf_contextual_help($text, $screen) {
 	if (strcmp($screen, 'settings_page_kalins-pdf-creation-station/kalins-pdf-creation-station') == 0 ) {//if we're on settings page, add setting help and return
 		require_once( WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_admin_help.php');
 		return;
@@ -311,6 +316,21 @@ function kalins_pdf_contextual_help($text, $screen) {
 	if (strcmp($screen, 'tools_page_kalins-pdf-creation-station/kalins-pdf-creation-station') == 0 ) {//otherwise show the tool help page (the two help files are very similar but have a few important differences)
 		require_once( WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_tool_help.php');
 	}
+}*/
+
+function kalins_pdf_contextual_help($contextual_help, $screen_id, $screen) {
+	global $kPDFadminPage;
+	if($screen_id == $kPDFadminPage){
+		$helpFile = DOMDocument::loadHTMLFile(WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_admin_help.html');
+		$contextual_help = $helpFile->saveHTML();
+	}else{
+		global $kPDFtoolPage;
+		if($screen_id == $kPDFtoolPage){
+			$toolHelpFile = DOMDocument::loadHTMLFile(WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_tool_help.html');
+			$contextual_help = $toolHelpFile->saveHTML();
+		}
+	}
+	return $contextual_help;
 }
 
 

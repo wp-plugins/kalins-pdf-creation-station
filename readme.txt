@@ -2,7 +2,7 @@
 Contributors: kalinbooks
 Tags: PDF, document, export, print, pdf, creation
 Requires at least: 3.0
-Tested up to: 3.0.1
+Tested up to: 3.0.4
 Stable tag: trunk
 
 Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
@@ -103,6 +103,9 @@ removed testing alerts
 *added 'format' parameter to all time shortcodes for total custom date/time formatting
 *added 'length' parameter to the post_excerpt shortcode to set character count of the excerpt
 
+= 2.0.1 =
+*Bug fix. This plugin no longer destroys all other admin help menus.
+
 == Upgrade Notice ==
 
 = 0.7 =
@@ -131,6 +134,9 @@ removed testing alerts
 
 = 2.0 =
 A few new features. Default formatting on Date/time shortcodes changed a little with the new formatting possibilities.
+
+= 2.0.1 =
+My sincerest apologies to everyone who has been wondering what the hell happened to their help menus.
 
 
 == About ==
