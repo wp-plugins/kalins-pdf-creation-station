@@ -106,6 +106,9 @@ removed testing alerts
 = 2.0.1 =
 *Bug fix. This plugin no longer destroys all other admin help menus.
 
+= 2.0.2 =
+*Bug fix. PDFs now properly generate when using 'quick edit' on posts when 'auto generate' is turned on.
+
 == Upgrade Notice ==
 
 = 0.7 =
@@ -137,6 +140,9 @@ A few new features. Default formatting on Date/time shortcodes changed a little 
 
 = 2.0.1 =
 My sincerest apologies to everyone who has been wondering what the hell happened to their help menus.
+
+= 2.0.2 =
+Bug fix. PDFs now properly generate when using 'quick edit' on posts when 'auto generate' is turned on.
 
 
 == About ==
