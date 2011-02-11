@@ -117,11 +117,11 @@ function kalins_pdf_configure_pages() {
 	
 	global $kPDFadminPage;
 	
-	$kPDFadminPage = add_submenu_page('options-general.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalins_pdf_admin_page');
+	$kPDFadminPage = add_submenu_page('options-general.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', 'kalins-pdf-admin', 'kalins_pdf_admin_page');
 	
 	global $kPDFtoolPage;
 	
-	$kPDFtoolPage = add_submenu_page('tools.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalins_pdf_tool_page');
+	$kPDFtoolPage = add_submenu_page('tools.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', 'kalins-pdf-tool', 'kalins_pdf_tool_page');
 	
 	
 	add_action( "admin_print_scripts-$kPDFadminPage", 'kalins_pdf_admin_head' );
