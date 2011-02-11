@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Kalin's PDF Creation Station
-Version: 2.0.1
+Version: 2.0.2
 Plugin URI: http://kalinbooks.com/pdf-creation-station/
 Description: Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 Author: Kalin Ringkvist
@@ -219,15 +219,21 @@ function kalinsPDF_publish_post( $post_id ){
 	$fileName = $post_id .'.pdf';
 	
 	if(file_exists($pdfDir .$fileName)){//if the pdf file for this page already exists,
+		
+		//echo "unlinking 1";
+		
 		unlink($pdfDir .$fileName);//delete it cuz it's now out of date since we're saving new post content
 	}
 	
-	$savedPost = get_post($post->ID, ARRAY_A);
+	$savedPost = get_post($post_id, ARRAY_A);
 	$slug = $savedPost['post_name'];
 	
 	$fileName = $slug .'.pdf';
 	
 	if(file_exists($pdfDir .$fileName)){//if the pdf file for this page already exists,
+		
+		//echo "unlinking 2";
+		
 		unlink($pdfDir .$fileName);//delete it cuz it's now out of date since we're saving new post content
 	}
 	
@@ -243,6 +249,10 @@ function kalinsPDF_publish_post( $post_id ){
 		}else{
 			$pageIDs = "po_" .$post_id;
 		}
+		
+		//echo "------ " .$post_id ."--- post id";
+		
+		$skipReturn = true;
 		
 		include(WP_PLUGIN_DIR .'/kalins-pdf-creation-station/kalins_pdf_create.php');
 	}

@@ -63,6 +63,9 @@ if($isSingle){
 	if(file_exists($pdfDir .$fileName)){//if the file already exists, simply redirect to that file and we're done
 		if(!isset($skipReturn)){
 			header("Location: " .$pdfURL .$fileName);
+			
+			//echo "hello header";
+			
 		}
 		return;
 	}else{
