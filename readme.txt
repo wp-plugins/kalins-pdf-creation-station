@@ -2,7 +2,7 @@
 Contributors: kalinbooks
 Tags: PDF, document, export, print, pdf, creation
 Requires at least: 3.0
-Tested up to: 3.0.4
+Tested up to: 3.1
 Stable tag: trunk
 
 Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
@@ -90,7 +90,6 @@ Bug fix. I broke the PDF creation popup with v 1.0 and had to make an emergency 
 removed testing alerts
 
 = 2.0 =
-
 *Added support for custom post types
 *moved the code identifying the default PDF directory and URL into a few constants at the top of kalins-pdf-creation-station.pdf, so that hackers can easily change them to whatever they want. Added example code that can be un-commented to change the PDF directory to use the base domain of your site instead of the wordpress uploads directory.
 *Fixed minor bug where 'reset defaults' on the settings page wasn't refreshing the 'post slug' and 'show on home' checkboxes
@@ -108,6 +107,24 @@ removed testing alerts
 
 = 2.0.2 =
 *Bug fix. PDFs now properly generate when using 'quick edit' on posts when 'auto generate' is turned on.
+
+= 3.0 =
+*upgraded TCPDF engine. This should improve image handling and also fixes the blockquotes issue, so blockquotes no longer need to use a monospaced font
+*added option to automatically construct a Table of Contents page in the creator tool
+*added post_meta shortcode for post's custom fields
+*added option on Tool page to turn off automatic page breaks between posts
+*added ability for hackers to translate/change the word 'page' to whatever they want
+*added option to run other plugin content filters
+*added post category(s) shortcode
+*added post tags shortcode
+*added option to convert Vimeo videos (both object and iframe style embeds)
+*added Ted Talk video link conversion option
+*YouTube link conversion now works for iframe style embeds as well as objects
+*added ability for hackers to change the order of the post list on the tool page
+*added post comments shortcode. Includes easy way for PHP coders to fully customize the display
+*added post parent shortcode
+*added post thumbnail shortcode
+
 
 == Upgrade Notice ==
 
@@ -143,6 +160,9 @@ My sincerest apologies to everyone who has been wondering what the hell happened
 
 = 2.0.2 =
 Bug fix. PDFs now properly generate when using 'quick edit' on posts when 'auto generate' is turned on.
+
+= 3.0 =
+Some new shortcodes, features and other improvements. New Table of Contents feature. Better image handling, improved integration with other plugins.
 
 
 == About ==

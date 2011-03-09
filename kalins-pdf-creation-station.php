@@ -1,15 +1,13 @@
 <?php
 /*
 Plugin Name: Kalin's PDF Creation Station
-Version: 2.0.2
+Version: 3.0
 Plugin URI: http://kalinbooks.com/pdf-creation-station/
 Description: Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 Author: Kalin Ringkvist
 Author URI: http://kalinbooks.com/
 
 Kalin's PDF Creation station by Kalin Ringkvist (email: kalin@kalinflash.com)
-
-This is Kalin Ringkvist's first WordPress plugin and first real PHP project so I can't make any guarantees as to the security or reliability of this plugin.
 
 Thanks to Marcos Rezende's Blog as PDF and Aleksander Stacherski's AS-PDF plugins which provided a great starting point.
 
@@ -27,6 +25,23 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+/*
+
+found this in a readme.txt file. Can I embed video into my readme? Exactly what I'm gonna try when I make my demo video
+Below is a slightly outdated example video showing Custom Post Type UI in action!
+[vimeo http://vimeo.com/10187055]
+
+look into: // set document information
+$pdf->SetCreator(PDF_CREATOR);
+$pdf->SetAuthor('Nicola Asuni');
+$pdf->SetTitle('TCPDF Example 045');
+$pdf->SetSubject('TCPDF Tutorial');
+$pdf->SetKeywords('TCPDF, PDF, example, test, guide');
+
+use ProgressBar.class.php in a new php file in an iframe on tool page for pdf generation
+
 */
 
 if ( !function_exists( 'add_action' ) ) {
@@ -78,10 +93,6 @@ function kalins_pdf_tool_page() {//load php that builds our tool page
 
 function kalins_pdf_admin_init(){
 	
-	//echo "admin init";
-	
-	//echo "pdf_admin_init";
-	
 	//creation tool ajax connections
 	add_action('wp_ajax_kalins_pdf_tool_create', 'kalins_pdf_tool_create');
 	add_action('wp_ajax_kalins_pdf_tool_delete', 'kalins_pdf_tool_delete');
@@ -94,13 +105,9 @@ function kalins_pdf_admin_init(){
 	
 	//add_action('contextual_help', 'kalins_pdf_contextual_help', 10, 2);
 	
-	
-	
 	register_deactivation_hook( __FILE__, 'kalins_pdf_cleanup' );
 	
 	wp_register_style('kalinPDFStyle', WP_PLUGIN_URL . '/kalins-pdf-creation-station/kalins_pdf_styles.css');
-	
-	
 
 	//--------------you may comment-out the foreach loop if you are using hard-coded PDF links in your theme. This will make your admin panels run slightly more efficiently.-------------
 	
@@ -122,7 +129,6 @@ function kalins_pdf_configure_pages() {
 	global $kPDFtoolPage;
 	
 	$kPDFtoolPage = add_submenu_page('tools.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', 'kalins-pdf-tool', 'kalins_pdf_tool_page');
-	
 	
 	add_action( "admin_print_scripts-$kPDFadminPage", 'kalins_pdf_admin_head' );
 	add_action('admin_print_styles-' . $kPDFadminPage, 'kalins_pdf_admin_styles');
@@ -207,7 +213,6 @@ function kalinsPDF_save_postdata( $post_id ) {
 	$meta->showLink = $_POST['kalinsPDFLink'];
 	
 	update_post_meta($post_id, 'kalinsPDFMeta', json_encode($meta));
-	
 }
 
 function kalinsPDF_publish_post( $post_id ){
@@ -219,9 +224,6 @@ function kalinsPDF_publish_post( $post_id ){
 	$fileName = $post_id .'.pdf';
 	
 	if(file_exists($pdfDir .$fileName)){//if the pdf file for this page already exists,
-		
-		//echo "unlinking 1";
-		
 		unlink($pdfDir .$fileName);//delete it cuz it's now out of date since we're saving new post content
 	}
 	
@@ -231,9 +233,6 @@ function kalinsPDF_publish_post( $post_id ){
 	$fileName = $slug .'.pdf';
 	
 	if(file_exists($pdfDir .$fileName)){//if the pdf file for this page already exists,
-		
-		//echo "unlinking 2";
-		
 		unlink($pdfDir .$fileName);//delete it cuz it's now out of date since we're saving new post content
 	}
 	
@@ -250,8 +249,6 @@ function kalinsPDF_publish_post( $post_id ){
 			$pageIDs = "po_" .$post_id;
 		}
 		
-		//echo "------ " .$post_id ."--- post id";
-		
 		$skipReturn = true;
 		
 		include(WP_PLUGIN_DIR .'/kalins-pdf-creation-station/kalins_pdf_create.php');
@@ -261,14 +258,19 @@ function kalinsPDF_publish_post( $post_id ){
 
 function kalinsPDF_content_filter($content){
 	
+	global $kalinsPDFRunning;
+	
+	if(isset($kalinsPDFRunning)){
+		return $content;
+	}
+	
 	$adminOptions = kalins_pdf_get_admin_options();
 	
 	if($adminOptions['showOnMulti'] == "false" && !is_single() && !is_page()){//if we're not on a single page/post we don't need to do anything else
 		return $content;
 	}
 	
-	global $wp_query;
-	$post = $wp_query->post;
+	global $post;
 	
 	$meta = json_decode(get_post_meta($post->ID, "kalinsPDFMeta", true));
 	
@@ -284,8 +286,6 @@ function kalinsPDF_content_filter($content){
 			return $content;//if it's not long enough, just quit
 		}
 	}
-	
-	
 	
 	if($showLink == "none"){//if we don't want a link or if we're not on a single page/post we don't need to do anything else
 		return $content;
@@ -400,8 +400,11 @@ function kalins_pdf_admin_save(){
 	
 	$kalinsPDFAdminOptions["includeImages"] = stripslashes($_POST['includeImages']);
 	$kalinsPDFAdminOptions["runShortcodes"] = stripslashes($_POST['runShortcodes']);
+	$kalinsPDFAdminOptions["runFilters"] = stripslashes($_POST['runFilters']);
 	
 	$kalinsPDFAdminOptions["convertYoutube"] = stripslashes($_POST['convertYoutube']);
+	$kalinsPDFAdminOptions["convertVimeo"] = stripslashes($_POST['convertVimeo']);
+	$kalinsPDFAdminOptions["convertTed"] = stripslashes($_POST['convertTed']);
 	
 	$kalinsPDFAdminOptions["showOnMulti"] = stripslashes($_POST['showOnMulti']);
 	$kalinsPDFAdminOptions["filenameByTitle"] = stripslashes($_POST['filenameByTitle']);
@@ -559,11 +562,8 @@ function kalins_pdf_create_all(){
 		closedir($handle);
 	}
 	
-	
 	$outputVar->existCount = $existCount;
 	
-	
-	//$outputVar->status = "success";
 	$outputVar->status = "success";
 	echo json_encode($outputVar);
 }
@@ -571,7 +571,6 @@ function kalins_pdf_create_all(){
 function kalinsPDF_build_pdf( $post ){
 	
 	$pdfDir = KALINS_PDF_SINGLES_DIR;
-	
 	
 	$fileName = $post_id .'.pdf';
 	
@@ -587,7 +586,6 @@ function kalinsPDF_build_pdf( $post ){
 	if(file_exists($pdfDir .$fileName)){//if the pdf file for this page already exists,
 		return false;
 	}
-	
 	
 	$isSingle = true;
 	
@@ -651,7 +649,10 @@ function kalins_pdf_getAdminSettings(){//simply returns all our default option v
 	$kalinsPDFAdminOptions['finalPage'] = '';
 	$kalinsPDFAdminOptions['fontSize'] = 10;
 	$kalinsPDFAdminOptions["runShortcodes"] = "false";
+	$kalinsPDFAdminOptions["runFilters"] = "false";
 	$kalinsPDFAdminOptions["convertYoutube"] = "true";
+	$kalinsPDFAdminOptions["convertVimeo"] = "true";
+	$kalinsPDFAdminOptions["convertTed"] = "true";
 	
 	$kalinsPDFAdminOptions["autoGenerate"] = "false";
 	$kalinsPDFAdminOptions['showLink'] = "none";
@@ -679,7 +680,13 @@ function kalins_pdf_getDefaultOptions(){//simply returns all our default option 
 	$kalinsPDFAdminOptions['finalPage'] = '<b>[blog_name]</b><p><b>[blog_description]</b></p><p>PDF generated [current_time format="F d, Y \a\t g:i A"] by Kalin\'s PDF Creation Station WordPress plugin</p>';
 	$kalinsPDFAdminOptions['fontSize'] = 10;
 	$kalinsPDFAdminOptions["runShortcodes"] = "false";
+	$kalinsPDFAdminOptions["runFilters"] = "false";
 	$kalinsPDFAdminOptions["convertYoutube"] = "true";
+	$kalinsPDFAdminOptions["convertVimeo"] = "true";
+	$kalinsPDFAdminOptions["convertTed"] = "true";
+	$kalinsPDFAdminOptions["autoPageBreak"] = "true";
+	$kalinsPDFAdminOptions["includeTOC"] = "true";
+	
 	
 	return $kalinsPDFAdminOptions;
 }
@@ -711,8 +718,6 @@ function kalins_pdf_init(){
 
 //----------------begin utility functions-----------------------
 
-//$curPage = "hello";
-
 //Note: none of these shortcodes are entered into the standard WordPress shortcode system so they only function within Kalin's PDF Creation Station
 function kalins_pdf_page_shortcode_replace($str, $page){//replace all passed in shortcodes
 	$SCList =  array("[ID]", "[post_title]", "[post_name]", "[guid]", "[comment_count]");//[post_date], "[post_date_gmt]", "[post_modified]", [post_modified_gmt]
@@ -724,78 +729,63 @@ function kalins_pdf_page_shortcode_replace($str, $page){//replace all passed in 
 	}
 	$str = str_replace("[post_author]", get_userdata($page->post_author)->user_login, $str);//post_author requires an extra function call to convert the userID into a name so we can't do it in the loop above
 	$str = str_replace("[post_permalink]", get_permalink( $page->ID ), $str);
-	
-	//not sure why wp_trim_excerpt(); doesn't work anymore
-	//if(strpos($str, "[post_excerpt]")){
+		
+	$postCallback = new KalinsPDF_callback;
 		
 	if(preg_match('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', $str)){
 		
 		if($page->post_excerpt == ""){//if there's no excerpt applied to the post, extract one
 			
-			$excerptCallObj = new KalinsPDF_ExcerptCallback;
-			$excerptCallObj->pageContent = strip_tags($page->post_content);
-			$str = preg_replace_callback('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$excerptCallObj, 'postExcerptCallback'), $str);
+			$postCallback->pageContent = strip_tags($page->post_content);
+			$str = preg_replace_callback('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postExcerptCallback'), $str);
 			
 		}else{//if there is a post excerpt just use it and don't generate our own
 			$str = preg_replace('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', $page->post_excerpt, $str);
 		}
 	}
 	
-	//global $curPage;
 	
-	//$curPage = $page;
+	//$myComments = 
+	//$str = str_replace("[post_comments]", wp_list_comments( array( 'callback' => 'kalinsPDF_comment' ) ), $str);
+	//$str = str_replace("[post_comments]", , $str);
 	
-	$dateCallObj = new KalinsPDF_DateCallback;//create dateCallback object for all the preg_replace_callbacks date calls
 	
-	$dateCallObj->curDate = $page->post_date;//change the curDate param and run the regex replace for each type of date/time shortcode
-	$str = preg_replace_callback('#\[ *post_date *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$dateCallObj, 'postDateCallback'), $str);
 	
-	$dateCallObj->curDate = $page->post_date_gmt;
-	$str = preg_replace_callback('#\[ *post_date_gmt *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$dateCallObj, 'postDateCallback'), $str);
 	
-	$dateCallObj->curDate = $page->post_modified;
-	$str = preg_replace_callback('#\[ *post_modified *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$dateCallObj, 'postDateCallback'), $str);
+	$postCallback->curDate = $page->post_date;//change the curDate param and run the regex replace for each type of date/time shortcode
+	$str = preg_replace_callback('#\[ *post_date *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
 	
-	$dateCallObj->curDate = $page->post_modified_gmt;
-	$str = preg_replace_callback('#\[ *post_modified_gmt *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$dateCallObj, 'postDateCallback'), $str);
+	$postCallback->curDate = $page->post_date_gmt;
+	$str = preg_replace_callback('#\[ *post_date_gmt *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
+	
+	$postCallback->curDate = $page->post_modified;
+	$str = preg_replace_callback('#\[ *post_modified *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
+	
+	$postCallback->curDate = $page->post_modified_gmt;
+	$str = preg_replace_callback('#\[ *post_modified_gmt *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
+	
+	$postCallback->page = $page;
+	$str = preg_replace_callback('#\[ *post_meta *(name=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postMetaCallback'), $str);
+	
+	$str = preg_replace_callback('#\[ *post_categories *(delimeter=[\'|\"]([^\'\"]*)[\'|\"])? *(links=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postCategoriesCallback'), $str);
+	
+	$str = preg_replace_callback('#\[ *post_tags *(delimeter=[\'|\"]([^\'\"]*)[\'|\"])? *(links=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postTagsCallback'), $str);
+	
+	$str = preg_replace_callback('#\[ *post_comments *(before=[\'|\"]([^\'\"]*)[\'|\"])? *(after=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'commentCallback'), $str);
+	
+	$str = preg_replace_callback('#\[ *post_parent *(link=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postParentCallback'), $str);
+	
+	if (current_theme_supports('post-thumbnails') ){
+		$arr = wp_get_attachment_image_src( get_post_thumbnail_id( $page->ID ), 'single-post-thumbnail' );
+		$str = str_replace("[post_thumb]", $arr[0], $str);
+	}
 	
 	$str = kalins_pdf_global_shortcode_replace($str);//then parse the global shortcodes
 	
 	return $str;
 }
 
-
-/*
-
-//try using this function
-function my_excerpt($text, $excerpt)
-{
-    if ($excerpt) return $excerpt;
-
-    $text = strip_shortcodes( $text );
-
-    $text = apply_filters('the_content', $text);
-    $text = str_replace(']]>', ']]&gt;', $text);
-    $text = strip_tags($text);
-    $excerpt_length = apply_filters('excerpt_length', 55);
-    $excerpt_more = apply_filters('excerpt_more', ' ' . '[...]');
-    $words = preg_split("/[\n\r\t ]+/", $text, $excerpt_length + 1, PREG_SPLIT_NO_EMPTY);
-    if ( count($words) > $excerpt_length ) {
-            array_pop($words);
-            $text = implode(' ', $words);
-            $text = $text . $excerpt_more;
-    } else {
-            $text = implode(' ', $words);
-    }
-
-    return apply_filters('wp_trim_excerpt', $text, $raw_excerpt);
-}
-
-
-*/
-
-
-class KalinsPDF_ExcerptCallback{
+class KalinsPDF_callback{
 	function postExcerptCallback($matches){
 		if(isset($matches[2])){
 			$exLength = intval($matches[2]);
@@ -804,21 +794,130 @@ class KalinsPDF_ExcerptCallback{
 		}
 		
 		if(strlen($this->pageContent) > $exLength){
-			return substr($this->pageContent, 0, $exLength) ."...";
+			return htmlspecialchars(strip_shortcodes(substr($this->pageContent, 0, $exLength))) ."...";//clean up and return excerpt
 		}else{
-			return $this->pageContent;
+			return htmlspecialchars(strip_shortcodes($this->pageContent));
 		}
 	}
-}
-
-class KalinsPDF_DateCallback{//create class just so we can pass in the $page var for preg_replace_callback()
+	
 	function postDateCallback($matches){
 		if(isset($matches[2])){//geez, regex's are awesome. the [2] grabs the second internal portion of the regex, the actual shortcode param value, the () within the ()
 			return mysql2date($matches[2], $this->curDate, $translate = true);//translate the wordpress formatted date into whatever date formatting the user passed in
 		}else{
 			return mysql2date("m-d-Y", $this->curDate, $translate = true);//otherwise do a simple day-month-year format
 		}
-	}	
+	}
+	
+	function postMetaCallback($matches){
+		$arr = get_post_meta($this->page->ID, $matches[2]);
+		return $arr[0];
+	}
+	
+	function postCategoriesCallback($matches){
+		$catString = "";
+		
+		$categories = get_the_category($this->page->ID);
+		$last_item = end($categories);
+		
+		if(isset($matches[2])){
+			$delimeter = $matches[2];
+		}else{
+			$delimeter = ', ';
+		}
+		
+		if(isset($matches[4]) && strtolower($matches[4]) == 'false'){
+			$links = false;
+		}else{
+			$links = true;
+		}
+		
+		foreach($categories as $category) {
+			if($links){
+				$catString = $catString .'<a href="' .get_category_link( $category->cat_ID ) .'" >' .$category->cat_name .'</a>';
+			}else{
+				$catString = $catString .$category->cat_name;
+			}
+			
+			if($category != $last_item){
+				$catString = $catString .$delimeter;
+			}
+		}
+		
+		return $catString;
+	}
+	
+	function postTagsCallback($matches){
+		$catString = "";
+		
+		$categories = get_the_tags($this->page->ID);
+		$last_item = end($categories);
+		
+		if(isset($matches[2])){
+			$delimeter = $matches[2];
+		}else{
+			$delimeter = ', ';
+		}
+		
+		if(isset($matches[4]) && strtolower($matches[4]) == 'false'){
+			$links = false;
+		}else{
+			$links = true;
+		}
+		
+		foreach($categories as $category) {
+			if($links){
+				$catString = $catString .'<a href="' .get_tag_link( $category->term_id ) .'" >' .$category->name .'</a>';
+			}else{
+				$catString = $catString .$category->name;
+			}
+			
+			if($category != $last_item){
+				$catString = $catString .$delimeter;
+			}
+		}
+		
+		return $catString;
+	}
+	
+	function commentCallback($matches) {
+		
+		if(defined("KALINS_PDF_COMMENT_CALLBACK")){
+			return call_user_func(KALINS_PDF_COMMENT_CALLBACK);
+		}
+		
+		global $post;
+		
+		$comments = get_comments('status=approve&post_id=' .$post->ID);
+		
+		$commentString = $matches[2];
+		
+		foreach($comments as $comment) {
+			if($comment->comment_author_url == ""){
+				$authorString = $comment->comment_author;
+			}else{
+				$authorString = '<a href="' .$comment->comment_author_url .'" >' .$comment->comment_author ."</a>";
+			}
+			$commentString = $commentString .'<p>' .$authorString ."- " .$comment->comment_author_email ." - " .get_comment_date(null, $comment->comment_ID) ." @ " .get_comment_date(get_option('time_format'), $comment->comment_ID) ."<br />" . $comment->comment_content ."</p>";	
+		}
+		
+		//get_comment_date('m-d-Y @ g:i A', $comment->comment_ID) 
+		
+		return $commentString .$matches[4];
+	}
+	
+	function postParentCallback($matches){
+		$parentID = $this->page->post_parent;
+		
+		if($parentID == 0){
+			return "";
+		}
+		
+		if($matches[2] == "false"){
+			return get_the_title($parentID);
+		}else{
+			return '<a href="' .get_permalink( $parentID ) .'" >' .get_the_title($parentID) .'</a>';
+		}
+	}
 }
 
 function kalinsPDF_timeCallback($matches){

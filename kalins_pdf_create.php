@@ -63,9 +63,6 @@ if($isSingle){
 	if(file_exists($pdfDir .$fileName)){//if the file already exists, simply redirect to that file and we're done
 		if(!isset($skipReturn)){
 			header("Location: " .$pdfURL .$fileName);
-			
-			//echo "hello header";
-			
 		}
 		return;
 	}else{
@@ -84,9 +81,15 @@ if($isSingle){
 		$headerSub = $adminOptions["headerSub"];
 		$includeImages = $adminOptions["includeImages"];
 		$runShortcodes = $adminOptions["runShortcodes"];
+		$runFilters = $adminOptions["runFilters"];
 		$convertYoutube = $adminOptions["convertYoutube"];
+		$convertVimeo = $adminOptions["convertVimeo"];
+		$convertTed = $adminOptions["convertTed"];
 		//$includeTables = $adminOptions["includeTables"];
 		$fontSize = $adminOptions["fontSize"];
+		
+		$autoPageBreak = "true";
+		$includeTOC = "false";//singles don't get no Table of contents
 	}
 }else{
 	try{
@@ -115,8 +118,13 @@ if($isSingle){
 		//$headerKeyWords = "list, of, keywords,";
 		$includeImages = stripslashes($_POST['includeImages']);
 		$runShortcodes = stripslashes($_POST["runShortcodes"]);
+		$runFilters = stripslashes($_POST["runFilters"]);
 		$convertYoutube = stripslashes($_POST["convertYoutube"]);
+		$convertVimeo = stripslashes($_POST["convertVimeo"]);
+		$convertTed = stripslashes($_POST["convertTed"]);
 		//$includeTables = stripslashes($_POST['includeTables']);
+		$autoPageBreak = stripslashes($_POST["autoPageBreak"]);
+		$includeTOC = stripslashes($_POST["includeTOC"]);
 		$fontSize = (int) $_POST['fontSize'];
 		
 		$kalinsPDFToolOptions = array();//collect our passed in values so we can save them for next time
@@ -126,7 +134,12 @@ if($isSingle){
 		$kalinsPDFToolOptions["filename"] = $_POST["fileNameCont"];
 		$kalinsPDFToolOptions["includeImages"] = $includeImages;
 		$kalinsPDFToolOptions["runShortcodes"] = $runShortcodes;
+		$kalinsPDFToolOptions["runFilters"] = $runFilters;
 		$kalinsPDFToolOptions["convertYoutube"] = $convertYoutube;
+		$kalinsPDFToolOptions["convertVimeo"] = $convertVimeo;
+		$kalinsPDFToolOptions["convertTed"] = $convertTed;
+		
+		//$convertVimeo
 		//$kalinsPDFToolOptions["includeTables"] = $includeTables;
 		$kalinsPDFToolOptions["beforePage"] = $beforePage;
 		$kalinsPDFToolOptions["beforePost"] = $beforePost;
@@ -135,6 +148,8 @@ if($isSingle){
 		$kalinsPDFToolOptions["titlePage"] = $titlePage;
 		$kalinsPDFToolOptions["finalPage"] = $finalPage;
 		$kalinsPDFToolOptions["fontSize"] = $fontSize;
+		$kalinsPDFToolOptions["autoPageBreak"] = $autoPageBreak;
+		$kalinsPDFToolOptions["includeTOC"] = $includeTOC;
 		
 		update_option(KALINS_PDF_TOOL_OPTIONS_NAME, $kalinsPDFToolOptions);//save options to database
 	} catch (Exception $e) {
@@ -195,9 +210,27 @@ try{
 	//set auto page breaks
 	$objTcpdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
 	//set image scale factor
-	$objTcpdf->setImageScale(PDF_IMAGE_SCALE_RATIO); 
+	$objTcpdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+	
+	
 	//set some language-dependent strings
+	//$lg['a_meta_charset'] = 'UTF-8';
+	//$lg['a_meta_dir'] = 'rtl';
+	//$lg['a_meta_language'] = 'fa';
+	
+	
+	/* to translate or otherwise change the word 'page', add the following code into your wp-config.php file. This will retain the setting even as I upgrade the plugin.
+	
+	define("KALINS_PDF_PAGE_TRANSLATION", "page translation string");
+	
+	*/
+	
+	if(defined("KALINS_PDF_PAGE_TRANSLATION")){//if someone defined a new 'page' translation in wp-config, set its value
+		$l['w_page'] = KALINS_PDF_PAGE_TRANSLATION;
+	}
+	
 	$objTcpdf->setLanguageArray($l); 
+	
 	//initialize document
 	$objTcpdf->AliasNbPages();
 
@@ -207,10 +240,12 @@ try{
 	return;
 }
 
+$objTcpdf->SetFont( PDF_FONT_NAME_MAIN, '', $fontSize );
+
 try{
 	if($titlePage != ""){
 		$objTcpdf->AddPage();//create title page and start off our PDF file
-		$objTcpdf->SetFont( PDF_FONT_NAME_MAIN, '', $fontSize );
+		//$objTcpdf->SetFont( PDF_FONT_NAME_MAIN, '', $fontSize );
 		if($isSingle){
 			$titlePage = kalins_pdf_page_shortcode_replace($titlePage, $result[0]);
 		}else{
@@ -218,6 +253,10 @@ try{
 		}
 		$strHtml = wpautop($titlePage, true );
 		$objTcpdf->writeHTML( $strHtml , true, 0, true, 0);
+		
+		if($autoPageBreak != "true" && $includeTOC == "true"){//if we don't page-break between posts AND we're including table of contents, we need to break after the title page so TOC can be on second page
+			$objTcpdf->AddPage();
+		}
 	}
 } catch (Exception $e) {
 	$outputVar->status = "problem creating title page.";
@@ -225,20 +264,28 @@ try{
 	return;
 }
 
+//global $proBar;
+//$proBar->setMessage('loading - this is a simulation ...');
+
 try{
 	$le = count($result);
 	
+	
+	
 	for($i = 0; $i < $le; $i++){
+		
+		if(!ini_get('safe_mode')){
+			set_time_limit(0);//set the timeout back to 0 so we can keep processing things that would normally choke with tons of pages and stuff
+		}
 		
 		$objPost = $result[$i];
 		
-		$post = $objPost;//set global post object so if other plugins run their shortcodes they'll have access to it
+		//global $post;
 		
 		$content = $objPost->post_content;
 		
-		if($convertYoutube == "true"){
-			$content = ereg_replace("<object(.*)youtube.com/v/(.*)\"(.*)</object>", '<p><a href="http://www.youtube.com/watch?v=\\2">YouTube Video</a></p>', $content);
-		}
+		$post = $objPost;//set global post object so if other plugins run their shortcodes they'll have access to it. Not sure why query_posts doesn't take care of this
+		query_posts('p=' .$post->ID);//for some reason this is also necessary so other plugins have access to values normally inside The Loop
 		
 		if($runShortcodes == "true"){//if we're running shortcodes, run them
 			$content = do_shortcode($content);
@@ -246,7 +293,26 @@ try{
 			$content = strip_shortcodes($content);//if not, remove them
 		}
 		
-		//$content = apply_filters('the_content', $content);
+		global $kalinsPDFRunning;
+		$kalinsPDFRunning = true;
+		
+		if($runFilters == "true"){//apply other plugin content filters if we're set to do that
+			$content = apply_filters('the_content', $content);
+		}
+		
+		if($convertYoutube == "true"){
+			$content = ereg_replace("<object(.*)youtube.com/v/(.*)\"(.*)</object>", '<p><a href="http://www.youtube.com/watch?v=\\2">YouTube Video</a></p>', $content);
+			$content = ereg_replace("<iframe(.*)http://www.youtube.com/embed/(.*)\"(.*)</iframe>", '<p><a href="http://www.youtube.com/watch?v=\\2">YouTube Video</a></p>', $content);
+		}
+		
+		if($convertVimeo == "true"){
+			$content = ereg_replace("<object(.*)vimeo.com/moogaloop.swf\?clip_id=(.*)&amp;server(.*)</object>", '<p><a href="http://vimeo.com/\\2">Vimeo Video</a></p>', $content);
+			$content = ereg_replace("<iframe(.*)http://player.vimeo.com/video/(.*)\" (.*)</iframe>", '<p><a href="http://vimeo.com/\\2">Vimeo Video</a></p>', $content);
+		}
+		
+		if($convertTed == "true"){//TED Talks
+			$content = ereg_replace("<object(.*)adKeys=talk=(.*);year=(.*)</object>", '<p><a href="http://www.ted.com/talks/\\2.html">Ted Talk</a></p>', $content);
+		}
 		
 		if(preg_match('/\[caption +[^\]]*\]/', $content)){//remove all captions surrounding images and whatnot since tcpdf can't interpret them (but leave the images in place)
 			$content = preg_replace('/\[caption +[^\]]*\]/', '', $content);//replace all instances of the opening caption tag
@@ -260,13 +326,13 @@ try{
 			}
 		}
 		
-		if(preg_match('/< *blockquote *>/', $content)){//if we've got instances of <blockquote> in this content
+		/*if(preg_match('/< *blockquote *>/', $content)){//if we've got instances of <blockquote> in this content
 			$content = preg_replace('/< *blockquote *>/', '<table border="0"><tr nobr="true"><td width="20">&nbsp;</td><td width="450"><pre>', $content);//replace it with a simple table
 			$content = preg_replace('/< *\/ *blockquote *>/', '</pre></td></tr></table><br/>', $content);//now replace the closing tag
 			
 			//$content = preg_replace('/< *blockquote *>/', 'WTFFFFFFFFF--------', $content);//replace it with a simple table
 			//$content = preg_replace('/< *\/ *blockquote *>/', 'AAAAAAAAAAAAAA-------', $content);//now replace the closing tag
-		}
+		}*/
 		
 		if($objPost->post_type == "page"){//insert appropriate html before and after every page and post
 			$content = $beforePage .$content .$afterPage;
@@ -276,16 +342,27 @@ try{
 		
 		$content = kalins_pdf_page_shortcode_replace($content, $objPost);
 		
-		// add a page
-		$objTcpdf->AddPage();
+		if($autoPageBreak == "true"){
+			// add a page
+			$objTcpdf->AddPage();
+		}
+		
+		if($includeTOC == "true"){//if we're including a TOC, add the bookmark. Pretty sweet that this still works if we're not adding new pages for each post
+			$objTcpdf->Bookmark($objPost->post_title, 0, 0);
+			//$objTcpdf->Cell(0, 10, '', 0, 1, 'L');
+		}
 		
 		// set font
-		$objTcpdf->SetFont( PDF_FONT_NAME_MAIN, '', $fontSize );
+		//$objTcpdf->SetFont( PDF_FONT_NAME_MAIN, '', $fontSize );
+		
+		//$content = apply_filters('the_content', $content);
 	
 		$strHtml = wpautop($content, true );
 		
 		// output the HTML content
 		$objTcpdf->writeHTML( $strHtml , true, 0, true, 0);
+		
+		//$proBar->increase();
 	}
 	
 } catch (Exception $e) {
@@ -316,6 +393,30 @@ try{
 }
 
 try{
+	
+	if($includeTOC == "true"){
+	
+		// add a new page for TOC
+		$objTcpdf->addTOCPage();
+		
+		// write the TOC title
+		$objTcpdf->SetFont('times', 'B', 16);
+		$objTcpdf->MultiCell(0, 0, 'Table Of Contents', 0, 'C', 0, 1, '', '', true, 0);
+		$objTcpdf->Ln();
+		
+		$objTcpdf->SetFont(PDF_FONT_NAME_MAIN, '', $fontSize );
+		
+		// add a simple Table Of Content at first page
+		// (check the example n. 59 for the HTML version)
+		$objTcpdf->addTOC(2, 'courier', '.', 'INDEX');
+		
+		// end of TOC page
+		$objTcpdf->endTOCPage();
+	}
+	
+	
+	
+	
 	//create and save the PDF document
 	$objTcpdf->Output( $pdfDir .$fileName, 'F' );
 } catch (Exception $e) {

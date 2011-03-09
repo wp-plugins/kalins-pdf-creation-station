@@ -5,6 +5,8 @@
 		exit;
 	}
 	
+	//echo get_shortcode_regex();
+	
 	kalinsPDF_createPDFDir();//make sure our PDF dir exists
 	
 	$create_nonce = wp_create_nonce( 'kalins_pdf_tool_create' );
@@ -13,7 +15,6 @@
 	
 	$adminOptions = kalins_pdf_get_tool_options();
 	
-	
 	/*$post_types = get_post_types('','names');
 	$typeString = "";
 	foreach ($post_types as $post_type ) {//loop to add a meta box to each type of post (pages, posts and custom)
@@ -21,10 +22,17 @@
 			$typeString = $typeString ."," .$post_type; 
 		}
 	}*/
-	$postList = get_posts('numberposts=-1');
+	
+	if(defined("KALINS_PDF_POST_ORDER")){
+		$customList = get_posts('numberposts=-1&post_type=any&orderby=' .KALINS_PDF_POST_ORDER_BY ."&order=" .KALINS_PDF_POST_ORDER);
+		$postList = get_posts('numberposts=-1&orderby=' .KALINS_PDF_POST_ORDER_BY ."&order=" .KALINS_PDF_POST_ORDER);
+	}else{
+		$customList = get_posts('numberposts=-1&post_type=any');
+		$postList = get_posts('numberposts=-1');
+	}
+	
 	$pageList = get_pages();
 	
-	$customList = get_posts('numberposts=-1&post_type=any');
 	$l = count($customList);
 	for($i=$l - 1; $i >= 0; $i--){//loop to remove all posts, pages and attachments from our custom list so we can have all custom types in the same array
 		if($customList[$i]->post_type == "post" || $customList[$i]->post_type == "attachment" || $customList[$i]->post_type == "page"){
@@ -63,6 +71,18 @@
 		}
 		closedir($handle);
 	}
+	
+	/*
+	 require_once 'ProgressBar.class.php';
+	 global $proBar;
+ 	$proBar = new ProgressBar();
+	$proBar->setMessage('loading ...');
+ 	$proBar->setAutohide(true);
+ 	$proBar->setSleepOnFinish(1);
+ 	//$proBar->setForegroundColor('#ff0000');
+
+ 	$elements = 100; //total number of elements to process
+	*/
 	
 ?>
 
@@ -230,12 +250,17 @@ jQuery(document).ready(function($){
 		data.fileNameCont = $("#txtFileName").val();
 		data.includeImages = $("#chkIncludeImages").is(':checked');
 		data.runShortcodes = $("#chkRunShortcodes").is(':checked');
+		data.runFilters = $("#chkRunFilters").is(':checked');
 		data.convertYoutube = $("#chkConvertYoutube").is(':checked');
+		data.convertVimeo = $("#chkConvertVimeo").is(':checked');
+		data.convertTed = $("#chkConvertTed").is(':checked');
 		//data.includeTables = $("#chkIncludeTables").is(':checked');
 		data.headerTitle = $("#txtHeaderTitle").val();
 		data.headerSub = $("#txtHeaderSub").val();
 		data.finalPage = $("#txtFinalPage").val();
 		data.fontSize = $("#txtFontSize").val();
+		data.autoPageBreak = $("#chkAutoPageBreak").is(':checked');
+		data.includeTOC = $("#chkIncludeTOC").is(':checked');
 		
 		$('#createStatus').html("Building PDF file. Wait time will depend on the length of the document, image complexity and current server load. Refreshing the page or navigating away will cancel the build.");
 
@@ -285,10 +310,40 @@ jQuery(document).ready(function($){
 					$('#chkRunShortcodes').attr('checked', false);
 				}
 				
+				if(newValues["runFilters"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkRunFilters').attr('checked', true);
+				}else{
+					$('#chkRunFilters').attr('checked', false);
+				}
+				
 				if(newValues["convertYoutube"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
 					$('#chkConvertYoutube').attr('checked', true);
 				}else{
 					$('#chkConvertYoutube').attr('checked', false);
+				}
+				
+				if(newValues["convertVimeo"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkConvertVimeo').attr('checked', true);
+				}else{
+					$('#chkConvertVimeo').attr('checked', false);
+				}
+				
+				if(newValues["convertTed"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkConvertTed').attr('checked', true);
+				}else{
+					$('#chkConvertTed').attr('checked', false);
+				}
+				
+				if(newValues["autoPageBreak"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkAutoPageBreak').attr('checked', true);
+				}else{
+					$('#chkAutoPageBreak').attr('checked', false);
+				}
+				
+				if(newValues["includeTOC"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkIncludeTOC').attr('checked', true);
+				}else{
+					$('#chkIncludeTOC').attr('checked', false);
 				}
 				
 			});
@@ -466,13 +521,18 @@ jQuery(document).ready(function($){
         <p>Header title: <input type='text' name='txtHeaderTitle' id='txtHeaderTitle' class='txtHeader' value='<?php echo $adminOptions["headerTitle"]; ?>'></input></p>
         <p>Header sub title: <input type='text' name='txtHeaderSub' id='txtHeaderSub' class='txtHeader' value='<?php echo $adminOptions["headerSub"]; ?>'></input></p><br/>
         
-         <p><input type='checkbox' id='chkIncludeImages' name='chkIncludeImages' <?php if($adminOptions["includeImages"] == "true"){echo "checked='yes' ";} ?>></input> Include Images &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type="text" id="txtFontSize" size="2" maxlength="3" value='<?php echo $adminOptions["fontSize"]; ?>' /> Content font size &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkRunShortcodes' name='chkRunShortcodes' <?php if($adminOptions["runShortcodes"] == "true"){echo "checked='yes' ";} ?>></input> Run other plugin shortcodes&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkConvertYoutube' name='chkConvertYoutube' <?php if($adminOptions["convertYoutube"] == "true"){echo "checked='yes' ";} ?>></input> Convert YouTube</p><br/>
+         <p><input type='checkbox' id='chkIncludeImages' name='chkIncludeImages' <?php if($adminOptions["includeImages"] == "true"){echo "checked='yes' ";} ?>></input> Include Images &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type="text" id="txtFontSize" size="2" maxlength="3" value='<?php echo $adminOptions["fontSize"]; ?>' /> Content font size &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkRunShortcodes' name='chkRunShortcodes' <?php if($adminOptions["runShortcodes"] == "true"){echo "checked='yes' ";} ?>></input> Run other plugin shortcodes, &nbsp;<input type='checkbox' id='chkRunFilters' name='chkRunFilters' <?php if($adminOptions["runFilters"] == "true"){echo "checked='yes' ";} ?>></input> and content filters</p>
+         
+         <p>Convert videos to links: &nbsp;&nbsp;<input type='checkbox' id='chkConvertYoutube' name='chkConvertYoutube' <?php if($adminOptions["convertYoutube"] == "true"){echo "checked='yes' ";} ?>></input> YouTube, &nbsp;<input type='checkbox' id='chkConvertVimeo' name='chkConvertVimeo' <?php if($adminOptions["convertVimeo"] == "true"){echo "checked='yes' ";} ?>></input> Vimeo, &nbsp;<input type='checkbox' id='chkConvertTed' name='chkConvertTed' <?php if($adminOptions["convertTed"] == "true"){echo "checked='yes' ";} ?>></input> Ted Talks</p>
+         
+         <br/>
         
-        File name: <input type="text" name='txtFileName' id='txtFileName' value='<?php echo $adminOptions["filename"]; ?>' ></input>.pdf
+        File name: <input type="text" name='txtFileName' id='txtFileName' value='<?php echo $adminOptions["filename"]; ?>' ></input>.pdf  &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; <input type='checkbox' id='chkAutoPageBreak' name='chkAutoPageBreak' <?php if($adminOptions["autoPageBreak"] == "true"){echo "checked='yes' ";} ?>></input> Automatic page breaks &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; <input type='checkbox' id='chkIncludeTOC' name='chkIncludeTOC' <?php if($adminOptions["includeTOC"] == "true"){echo "checked='yes' ";} ?>></input> Include Table of Contents
         </p>
         <p align="center"><br />
         <button id="btnOpenDialog">Create PDF!</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button type='button' id='btnReset'>Reset Defaults</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a name="createNow" id="createNow" href="javascript:void(0);" title="Use this if the 'Create PDF!' button won't properly show the popup. You won't be able to re-order your pages, but at least you can create a document.">create now!</a></p>
         <p align="center"><span id="createStatus">&nbsp;</span></p>
+        
     </div>
     <div class='collapse'><b>Existing PDF Files</b></div>
     <div class="generalHolder" id="pdfListDiv"><p>List of compiled documents goes here</p></div>
@@ -503,12 +563,18 @@ jQuery(document).ready(function($){
         <li><b>[post_modified_gmt format="m-d-Y"]</b> - date page/post was last modified in gmt time <b>*</b></li>
         <li><b>[guid]</b> - url of the page/post</li>
         <li><b>[comment_count]</b> - number of comments posted for this post/page</li>
+        <li><b>[post_meta name="custom_field_name"]</b> - page/post custom field value. Correct 'name' parameter required</li>
+        <li><b>[post_tags delimeter=", " links="true"]</b> - post tags list. Optional 'delimiter' parameter sets separator text. Use optional 'links' parameter to turn off links to tag pages</li>
+        <li><b>[post_categories delimeter=", " links="true"]</b> - post categories list. Parameters work like tag shortcode.</li>
+        <li><b>[post_parent link="true"]</b> - post parent. Use optional 'link' parameter to turn off link</li>
+        <li><b>[post_comments before="" after=""]</b> - post comments. Parameters represent text/HTML that will be inserted before and after comment list but will not be displayed if there are no comments. PHP coders: <a href="http://kalinbooks.com/2011/customize-comments-pdf-creation-station">learn how to customize comment display.</a></li>
+        <li><b>[post_thumb]</b> - URL to the page/post's featured image (requires theme support)</li>
         </ul></p>
         <p><b>*</b> Time shortcodes have an optional format parameter. Format your dates using these possible tokens: m=month, M=text month, F=full text month, d=day, D=short text Day Y=4 digit year, y=2 digit year, H=hour, i=minute, s=seconds. More tokens listed here: <a href="http://codex.wordpress.org/Formatting_Date_and_Time" target="_blank">http://codex.wordpress.org/Formatting_Date_and_Time.</a> </p>
         
         <p><b>Note: these shortcodes only work on this page.</b></p>
         <hr/>
-        <p><b>The following tags are supported wherever HTML is allowed (according to TCPDF documentation):</b><br /> a, b, blockquote, br, dd, del, div, dl, dt, em, font, h1, h2, h3, h4, h5, h6, hr, i, img, li, ol, p, pre, small, span, strong, sub, sup, table, tcpdf, td, th, thead, tr, tt, u, ul</p>
+        <p><b>The following tags are supported wherever HTML is allowed (according to TCPDF documentation):</b><br /> a, b, blockquote, br, dd, del, div, dl, dt, em, font, h1, h2, h3, h4, h5, h6, hr, i, img, li, ol, p, pre, small, span, strong, sub, sup, table, tcpdf, td, th, thead, tr, tt, u, ul. Also supports some XHTML, CSS, JavaScript and forms.</p>
         <p>Please use double quotes (") in HTML attributes such as font size or href, due to a bug with single quotes.</p>
     
     </div>
@@ -516,31 +582,20 @@ jQuery(document).ready(function($){
     <div class="generalHolder">
     
     	<p>Thank you for using PDF Creation Station. To report bugs, request help or suggest features, visit <a href="http://kalinbooks.com/pdf-creation-station/" target="_blank">KalinBooks.com/pdf-creation-station</a>. If you find this plugin useful, please consider <A href="http://wordpress.org/extend/plugins/kalins-pdf-creation-station/">rating this plugin on WordPress.org</A> or making a PayPal donation:</p>
-       
-
 
 <p>
-
 <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
 <input type="hidden" name="cmd" value="_s-xclick">
 <input type="hidden" name="hosted_button_id" value="C6KPVS6HQRZJS">
 <input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="Donate to Kalin Ringkvist's WordPress plugin development.">
 <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
 </form>
-
 </p><br/>
-
-<p>
-If youhttp://wordpress.org/extend/plugins/kalins-pdf-creation-station/
-</p>
-       
-        
         
          <p>You may also like <a href="http://kalinbooks.com/easy-edit-links-wordpress-plugin/" target="_blank">Kalin's Easy Edit Links</a> - <br /> Adds a box to your page/post edit screen with links and edit buttons for all pages, posts, tags, categories, and links for convenient edit-switching and internal linking.</p>
          
          <p>Or <a href="http://kalinbooks.com/post-list-wordpress-plugin/" target="_blank">Kalin's Post List</a> - <br /> Use a shortcode in your posts to insert dynamic, highly customizable lists of posts, pages, images, or attachments based on categories and tags. Works for table-of-contents pages or as a related posts plugin.</p>
-       
-         
+        
     </div>
     
     <div id="sortDialog" title="Adjust Order and Create"><div id="sortHolder" class="sortHolder"></div><p align="center"><br /><button id="btnCreateCancel">Cancel</button>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<button id="btnCreate">Create PDF!</button></p></div>

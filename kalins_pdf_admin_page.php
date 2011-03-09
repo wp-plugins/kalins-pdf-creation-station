@@ -22,10 +22,9 @@ jQuery(document).ready(function($){
 	var saveNonce = '<?php echo $save_nonce; //pass a different nonce security string for each possible ajax action?>'
 	var resetNonce = '<?php echo $reset_nonce; ?>'
 	var createAllNonce = '<?php echo $create_nonce; ?>'
-
 	
 	$('#btnReset').click(function(){
-		if(confirm("Are you sure you want to reset all of your field values? You will lose all the information you have entered into the form.")){
+		if(confirm("Are you sure you want to reset all of your field values? You will lose all the information you have entered into the form and your cache of PDF files will be cleared.")){
 			var data = { action: 'kalins_pdf_reset_admin_defaults', _ajax_nonce : resetNonce};
 			
 			jQuery.post(ajaxurl, data, function(response) {
@@ -89,11 +88,30 @@ jQuery(document).ready(function($){
 					$('#chkRunShortcodes').attr('checked', false);
 				}
 				
+				if(newValues["runFilters"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkRunFilters').attr('checked', true);
+				}else{
+					$('#chkRunFilters').attr('checked', false);
+				}
+				
 				if(newValues["convertYoutube"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
 					$('#chkConvertYoutube').attr('checked', true);
 				}else{
 					$('#chkConvertYoutube').attr('checked', false);
 				}
+				
+				if(newValues["convertVimeo"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkConvertVimeo').attr('checked', true);
+				}else{
+					$('#chkConvertVimeo').attr('checked', false);
+				}
+				
+				if(newValues["convertTed"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+					$('#chkConvertTed').attr('checked', true);
+				}else{
+					$('#chkConvertTed').attr('checked', false);
+				}
+				
 			});
 		}
 	});
@@ -118,7 +136,10 @@ jQuery(document).ready(function($){
 		data.fontSize = $("#txtFontSize").val();
 		data.includeImages = $("#chkIncludeImages").is(':checked');
 		data.runShortcodes = $("#chkRunShortcodes").is(':checked');
+		data.runFilters = $("#chkRunFilters").is(':checked');
 		data.convertYoutube = $("#chkConvertYoutube").is(':checked');
+		data.convertVimeo = $("#chkConvertVimeo").is(':checked');
+		data.convertTed = $("#chkConvertTed").is(':checked');
 		//data.includeTables = $("#chkIncludeTables").is(':checked');
 		data.showLink = $("input[name='kalinsPDFLink']:checked").val();
 		data.wordCount = $("#txtWordCount").val();
@@ -146,11 +167,6 @@ jQuery(document).ready(function($){
 			}
 		});
 	});
-	
-	
-	
-	
-	
 	
 	$('#btnCreateAll').click(function(){
 		callCreateAll();
@@ -180,7 +196,6 @@ jQuery(document).ready(function($){
 					creationInProcess = false;
 				}else{
 					$('#createStatus').html(newFileData.existCount + " out of " + newFileData.totalCount  +  " PDF files cached. Now building the next " +  newFileData.createCount + ".");
-					//setTimeout(callCreateAll, 2000);
 					creationInProcess = true;
 					callCreateAll();
 				}
@@ -189,10 +204,6 @@ jQuery(document).ready(function($){
 			}
 		});
 	}
-	
-	
-	
-	
 	
 	function toggleWidgets() {//make menus collapsible
 		$('.collapse').addClass('plus');
@@ -257,7 +268,8 @@ jQuery(document).ready(function($){
         <p>Before Link: <input type="text" id='txtBeforeLink' class='txtHeader' value='<?php echo $adminOptions["beforeLink"]; ?>' /></p>
         <p>After Link: <input type="text" id='txtAfterLink' class='txtHeader' value='<?php echo $adminOptions["afterLink"]; ?>' /></p>
         <br/>
-        <p><input type='checkbox' id='chkIncludeImages' name='chkIncludeImages' <?php if($adminOptions["includeImages"] == "true"){echo "checked='yes' ";} ?>></input> Include Images &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type="text" id="txtFontSize" size="2" maxlength="3" value='<?php echo $adminOptions["fontSize"]; ?>' /> Content font size &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkRunShortcodes' name='chkRunShortcodes' <?php if($adminOptions["runShortcodes"] == "true"){echo "checked='yes' ";} ?>></input> Run other plugin shortcodes&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkConvertYoutube' name='chkConvertYoutube' <?php if($adminOptions["convertYoutube"] == "true"){echo "checked='yes' ";} ?>></input> Convert YouTube</p>
+        <p><input type='checkbox' id='chkIncludeImages' name='chkIncludeImages' <?php if($adminOptions["includeImages"] == "true"){echo "checked='yes' ";} ?>></input> Include Images &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type="text" id="txtFontSize" size="2" maxlength="3" value='<?php echo $adminOptions["fontSize"]; ?>' /> Content font size &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<input type='checkbox' id='chkRunShortcodes' name='chkRunShortcodes' <?php if($adminOptions["runShortcodes"] == "true"){echo "checked='yes' ";} ?>></input> Run other plugin shortcodes, &nbsp;<input type='checkbox' id='chkRunFilters' name='chkRunFilters' <?php if($adminOptions["runFilters"] == "true"){echo "checked='yes' ";} ?>></input> and content filters</p>
+        <p>Convert videos to links: &nbsp;&nbsp;<input type='checkbox' id='chkConvertYoutube' name='chkConvertYoutube' <?php if($adminOptions["convertYoutube"] == "true"){echo "checked='yes' ";} ?>></input> YouTube, &nbsp;<input type='checkbox' id='chkConvertVimeo' name='chkConvertVimeo' <?php if($adminOptions["convertVimeo"] == "true"){echo "checked='yes' ";} ?>></input> Vimeo, &nbsp;<input type='checkbox' id='chkConvertTed' name='chkConvertTed' <?php if($adminOptions["convertTed"] == "true"){echo "checked='yes' ";} ?>></input> Ted Talks</p>
         <br/>
         
         <p>Default Link Placement (can be overwritten in page/post edit page):</p>
@@ -314,13 +326,19 @@ jQuery(document).ready(function($){
         <li><b>[post_modified_gmt format="m-d-Y"]</b> - date page/post was last modified in gmt time <b>*</b></li>
         <li><b>[guid]</b> - url of the page/post</li>
         <li><b>[comment_count]</b> - number of comments posted for this post/page</li>
+        <li><b>[post_meta name="custom_field_name"]</b> - page/post custom field value. Correct 'name' parameter required</li>
+        <li><b>[post_tags delimeter=", " links="true"]</b> - post tags list. Optional 'delimiter' parameter sets separator text. Use optional 'links' parameter to turn off links to tag pages</li>
+        <li><b>[post_categories delimeter=", " links="true"]</b> - post categories list. Parameters work like tag shortcode.</li>
+        <li><b>[post_parent link="true"]</b> - post parent. Use optional 'link' parameter to turn off link</li>
+        <li><b>[post_comments before="" after=""]</b> - post comments. Parameters represent text/HTML that will be inserted before and after comment list but will not be displayed if there are no comments. PHP coders: <a href="http://kalinbooks.com/2011/customize-comments-pdf-creation-station">learn how to customize comment display.</a></li>
+        <li><b>[post_thumb]</b> - URL to the page/post's featured image (requires theme support)</li>
         </ul></p>
         <p><b>*</b> Time shortcodes have an optional format parameter. Format your dates using these possible tokens: m=month, M=text month, F=full text month, d=day, D=short text Day Y=4 digit year, y=2 digit year, H=hour, i=minute, s=seconds. More tokens listed here: <a href="http://codex.wordpress.org/Formatting_Date_and_Time" target="_blank">http://codex.wordpress.org/Formatting_Date_and_Time.</a> </p>
         
         <p><b>Note: these shortcodes only work on this page.</b></p>
         <hr/>
         
-        <p><b>The following tags are supported wherever HTML is allowed (according to TCPDF documentation):</b><br /> a, b, blockquote, br, dd, del, div, dl, dt, em, font, h1, h2, h3, h4, h5, h6, hr, i, img, li, ol, p, pre, small, span, strong, sub, sup, table, tcpdf, td, th, thead, tr, tt, u, ul</p>
+        <p><b>The following tags are supported wherever HTML is allowed (according to TCPDF documentation):</b><br /> a, b, blockquote, br, dd, del, div, dl, dt, em, font, h1, h2, h3, h4, h5, h6, hr, i, img, li, ol, p, pre, small, span, strong, sub, sup, table, tcpdf, td, th, thead, tr, tt, u, ul. Also supports some XHTML, CSS, JavaScript and forms.</p>
         <p>Please use double quotes (") in HTML attributes such as font size or href, due to a bug with single quotes.</p>
     
     </div>
