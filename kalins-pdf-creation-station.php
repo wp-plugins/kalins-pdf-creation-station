@@ -850,6 +850,11 @@ class KalinsPDF_callback{
 		$catString = "";
 		
 		$categories = get_the_tags($this->page->ID);
+		
+		if(!$categories){
+			return "";
+		}
+		
 		$last_item = end($categories);
 		
 		if(isset($matches[2])){
