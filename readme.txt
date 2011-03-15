@@ -124,7 +124,10 @@ removed testing alerts
 *added post comments shortcode. Includes easy way for PHP coders to fully customize the display
 *added post parent shortcode
 *added post thumbnail shortcode
-*added call to set_time_limit(0) to help prevent timeouts on very large PDF builds
+
+= 3.1 =
+*Fixed 'create PDF' popup in Firefox
+*Changed default font to Times and default size to 12, which improves overall look/feel of documents
 
 
 == Upgrade Notice ==
@@ -163,8 +166,10 @@ My sincerest apologies to everyone who has been wondering what the hell happened
 Bug fix. PDFs now properly generate when using 'quick edit' on posts when 'auto generate' is turned on.
 
 = 3.0 =
-Some new shortcodes, features and other improvements. New Table of Contents feature. Better image handling, improved integration with other plugins. Tool page less likely to fail/timeout on large/complex PDF generation.
+Some new shortcodes, features and other improvements. New Table of Contents feature. Better image handling, improved integration with other plugins.
 
+= 3.1 =
+Firefox fix and PDF font change to Times so PDFs should look a little better 
 
 == About ==
 

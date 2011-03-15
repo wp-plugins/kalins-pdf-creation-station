@@ -201,8 +201,8 @@ try{
 		$objTcpdf->SetHeaderData(null, null, kalins_pdf_global_shortcode_replace($headerTitle), kalins_pdf_global_shortcode_replace($headerSub) );
 	}
 	// set header and footer fonts
-	$objTcpdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
-	$objTcpdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+	$objTcpdf->setHeaderFont(Array('Times', '', PDF_FONT_SIZE_MAIN));
+	$objTcpdf->setFooterFont(Array('Times', '', PDF_FONT_SIZE_DATA));
 	//set margins
 	$objTcpdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
 	$objTcpdf->SetHeaderMargin(PDF_MARGIN_HEADER);
@@ -240,7 +240,7 @@ try{
 	return;
 }
 
-$objTcpdf->SetFont( PDF_FONT_NAME_MAIN, '', $fontSize );
+$objTcpdf->SetFont( 'Times', '', $fontSize );
 
 try{
 	if($titlePage != ""){
@@ -404,7 +404,7 @@ try{
 		$objTcpdf->MultiCell(0, 0, 'Table Of Contents', 0, 'C', 0, 1, '', '', true, 0);
 		$objTcpdf->Ln();
 		
-		$objTcpdf->SetFont(PDF_FONT_NAME_MAIN, '', $fontSize );
+		$objTcpdf->SetFont('Times', '', $fontSize );
 		
 		// add a simple Table Of Content at first page
 		// (check the example n. 59 for the HTML version)

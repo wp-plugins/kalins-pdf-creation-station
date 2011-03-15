@@ -122,8 +122,8 @@ jQuery(document).ready(function($){
 		
 		for(i=0; i<l; i++){
 			$('#btnDelete_' + i).click(function(){
-				var fileIndex = parseInt($(this).attr('name').substr(10));							
-				if(confirm("Are you sure you want to delete " + pdfList[fileIndex].fileName + "?")){							
+				var fileIndex = parseInt($(this).attr('name').substr(10));		
+				if(confirm("Are you sure you want to delete " + pdfList[fileIndex].fileName + "?")){						
 					deleteFile(pdfList[fileIndex].fileName, fileIndex);
 				}
 			});
@@ -363,16 +363,17 @@ jQuery(document).ready(function($){
 	});
 	
 	$(function() {
+		
 		$('#sortDialog').dialog({
 			autoOpen: false,
-			show: 'blind',
 			hide: 'explode',
 			width: 370,
 			resizable:false,
 			modal: true
 		});
-		
+			
 		$('#btnOpenDialog').click(function() {
+			
 			var sortHTML = '<ul id="sortable">';
 			var pageCount = 0;
 			var l = pageList.length;		   
@@ -407,6 +408,9 @@ jQuery(document).ready(function($){
 			sortHTML += '</ul>';
 			$('#sortHolder').html(sortHTML);
 			
+			
+			//$('#sortHolder').html("Hello this is my HTML Crap-------------------------------------------------------");
+			
 			$(function() {//set the div as sortable every time we open the dialog (doing this earlier and just calling refresh didn't work)
 				$("#sortable").sortable();
 				$("#sortable").disableSelection();
@@ -422,6 +426,15 @@ jQuery(document).ready(function($){
 });
 	
 </script>
+
+
+<!--<style>
+
+.ui-widget input, .ui-widget select {font-family: arial; padding: 0px 0px;}
+.ui-dialog-content {font-weight: normal; line-height: normal; font-family: arial; font-size: 8pt; }
+.ui-widget-content {font-weight: normal; line-height: normal; font-family: arial; font-size: 8pt;}
+
+</style> -->
 
 <h2>PDF Creation Station</h2>
 
