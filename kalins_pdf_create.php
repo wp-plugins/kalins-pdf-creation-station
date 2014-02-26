@@ -232,7 +232,7 @@ try{
 	$objTcpdf->setLanguageArray($l); 
 	
 	//initialize document
-	$objTcpdf->AliasNbPages();
+	$objTcpdf->getAliasNbPages();
 
 } catch (Exception $e) {
 	$outputVar->status = "problem setting TCPDF options. Double check header titles and font size";
@@ -301,17 +301,17 @@ try{
 		}
 		
 		if($convertYoutube == "true"){
-			$content = ereg_replace("<object(.*)youtube.com/v/(.*)\"(.*)</object>", '<p><a href="http://www.youtube.com/watch?v=\\2">YouTube Video</a></p>', $content);
-			$content = ereg_replace("<iframe(.*)http://www.youtube.com/embed/(.*)\"(.*)</iframe>", '<p><a href="http://www.youtube.com/watch?v=\\2">YouTube Video</a></p>', $content);
+			$content = preg_replace("#<object(.*)youtube.com/v/(.*)\"(.*)</object>#", '<p><a href="http://www.youtube.com/watch?v=\\2">YouTube Video</a></p>', $content);
+			$content = preg_replace("#<iframe(.*)http://www.youtube.com/embed/(.*)\"(.*)</iframe>#", '<p><a href="http://www.youtube.com/watch?v=\\2">YouTube Video</a></p>', $content);
 		}
 		
 		if($convertVimeo == "true"){
-			$content = ereg_replace("<object(.*)vimeo.com/moogaloop.swf\?clip_id=(.*)&amp;server(.*)</object>", '<p><a href="http://vimeo.com/\\2">Vimeo Video</a></p>', $content);
-			$content = ereg_replace("<iframe(.*)http://player.vimeo.com/video/(.*)\" (.*)</iframe>", '<p><a href="http://vimeo.com/\\2">Vimeo Video</a></p>', $content);
+			$content = preg_replace("#<object(.*)vimeo.com/moogaloop.swf\?clip_id=(.*)&amp;server(.*)</object>#", '<p><a href="http://vimeo.com/\\2">Vimeo Video</a></p>', $content);
+			$content = preg_replace("#<iframe(.*)http://player.vimeo.com/video/(.*)\" (.*)</iframe>#", '<p><a href="http://vimeo.com/\\2">Vimeo Video</a></p>', $content);
 		}
 		
 		if($convertTed == "true"){//TED Talks
-			$content = ereg_replace("<object(.*)adKeys=talk=(.*);year=(.*)</object>", '<p><a href="http://www.ted.com/talks/\\2.html">Ted Talk</a></p>', $content);
+			$content = preg_replace("#<object(.*)adKeys=talk=(.*);year=(.*)</object>#", '<p><a href="http://www.ted.com/talks/\\2.html">Ted Talk</a></p>', $content);
 		}
 		
 		if(preg_match('/\[caption +[^\]]*\]/', $content)){//remove all captions surrounding images and whatnot since tcpdf can't interpret them (but leave the images in place)

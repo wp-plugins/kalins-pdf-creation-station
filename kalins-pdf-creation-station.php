@@ -69,7 +69,7 @@ if(!defined("KALINS_PDF_DIR")){//only set directories and URLs if they are not a
 
 
 //---------------------------------
-//to change the PDF location to your document root, comment out the seven lines above, then un-comment these six lines below:
+//to change the PDF location to your document root, comment out the if statement above, then un-comment the if statement below:
 //(This code will function as-is in wp-config.php)
 
 /*
@@ -336,8 +336,9 @@ function kalins_pdf_contextual_help($contextual_help, $screen_id, $screen) {
 	}else{
 		global $kPDFtoolPage;
 		if($screen_id == $kPDFtoolPage){
-			$toolHelpFile = DOMDocument::loadHTMLFile(WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_tool_help.html');
-			$contextual_help = $toolHelpFile->saveHTML();
+			$doc = new DOMDocument();
+			$toolHelpFile = $doc->loadHTMLFile(WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_tool_help.html');
+			$contextual_help = $doc->saveHTML();
 		}
 	}
 	return $contextual_help;
@@ -452,27 +453,12 @@ function kalins_pdf_tool_create(){//called from create button
 
 function kalins_pdf_tool_delete(){//called from either the "Delete All" button or the individual delete buttons
 	
-	//echo $pdfDirBase ."echoing";
-	
-	//echo "WTF!!";
-	
 	check_ajax_referer( "kalins_pdf_tool_delete" );
 	$outputVar = new stdClass();
 	$fileName = $_POST["filename"];
 	
-	//echo json_encode($outputVar);
-	
-	
-	//$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/';
-	//$pdfDir = $pdfDirBase;
-	
-	//$uploads = wp_upload_dir();
-	//$pdfDir = $uploads['basedir'].'/kalins-pdf/';
-	
 	$pdfDir = KALINS_PDF_DIR;
-	
-	//echo $pdfDir .$fileName;
-	
+		
 	if($fileName == "all"){//if we're deleting all of them
 		if ($handle = opendir($pdfDir)) {//open pdf directory
 			while (false !== ($file = readdir($handle))) {
@@ -727,7 +713,7 @@ function kalins_pdf_page_shortcode_replace($str, $page){//replace all passed in 
 		$scName = substr($SCList[$i], 1, count($SCList[$i]) - 2);
 		$str = str_replace($SCList[$i], $page->$scName, $str);
 	}
-	$str = str_replace("[post_author]", get_userdata($page->post_author)->user_login, $str);//post_author requires an extra function call to convert the userID into a name so we can't do it in the loop above
+	
 	$str = str_replace("[post_permalink]", get_permalink( $page->ID ), $str);
 		
 	$postCallback = new KalinsPDF_callback;
@@ -743,15 +729,7 @@ function kalins_pdf_page_shortcode_replace($str, $page){//replace all passed in 
 			$str = preg_replace('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', $page->post_excerpt, $str);
 		}
 	}
-	
-	
-	//$myComments = 
-	//$str = str_replace("[post_comments]", wp_list_comments( array( 'callback' => 'kalinsPDF_comment' ) ), $str);
-	//$str = str_replace("[post_comments]", , $str);
-	
-	
-	
-	
+
 	$postCallback->curDate = $page->post_date;//change the curDate param and run the regex replace for each type of date/time shortcode
 	$str = preg_replace_callback('#\[ *post_date *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
 	
@@ -765,6 +743,9 @@ function kalins_pdf_page_shortcode_replace($str, $page){//replace all passed in 
 	$str = preg_replace_callback('#\[ *post_modified_gmt *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
 	
 	$postCallback->page = $page;
+	
+	$str = preg_replace_callback('#\[ *post_author *(type=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postAuthorCallback'), $str);
+	
 	$str = preg_replace_callback('#\[ *post_meta *(name=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postMetaCallback'), $str);
 	
 	$str = preg_replace_callback('#\[ *post_categories *(delimeter=[\'|\"]([^\'\"]*)[\'|\"])? *(links=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postCategoriesCallback'), $str);
@@ -775,10 +756,10 @@ function kalins_pdf_page_shortcode_replace($str, $page){//replace all passed in 
 	
 	$str = preg_replace_callback('#\[ *post_parent *(link=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postParentCallback'), $str);
 	
-	if (current_theme_supports('post-thumbnails') ){
-		$arr = wp_get_attachment_image_src( get_post_thumbnail_id( $page->ID ), 'single-post-thumbnail' );
-		$str = str_replace("[post_thumb]", $arr[0], $str);
-	}
+	$str = preg_replace_callback('#\[ *post_thumb *(size=[\'|\"]([^\'\"]*)[\'|\"])? *(extract=[\'|\"]([^\'\"]*)[\'|\"])? *\]#',
+			array(&$postCallback, 'postThumbCallback'),
+			$str);
+	
 	
 	$str = kalins_pdf_global_shortcode_replace($str);//then parse the global shortcodes
 	
@@ -806,6 +787,16 @@ class KalinsPDF_callback{
 		}else{
 			return mysql2date("m-d-Y", $this->curDate, $translate = true);//otherwise do a simple day-month-year format
 		}
+	}
+	
+	function postAuthorCallback($matches)
+	{
+		$userInfo = get_userdata($this->page->post_author);		
+		if(isset($matches[2]))
+		{
+			return $userInfo->$matches[2];
+		}
+		return $userInfo->display_name;
 	}
 	
 	function postMetaCallback($matches){
@@ -922,6 +913,60 @@ class KalinsPDF_callback{
 		}else{
 			return '<a href="' .get_permalink( $parentID ) .'" >' .get_the_title($parentID) .'</a>';
 		}
+	}
+	
+	function postThumbCallback($matches)
+	{
+		$imageUrl = "";
+		$mode = "none";
+		 
+		if(isset($matches[4]))
+		{
+			switch(strtolower($matches[4]))
+			{
+				case "force":
+				case "on":
+					$mode = strtolower($matches[4]);
+					break;
+			}
+		}
+		 
+		if ($mode != "force" && current_theme_supports('post-thumbnails'))
+		{
+			if(isset($matches[2]))
+			{
+				$imageSize = $matches[2];
+			}
+			else
+			{
+				$imageSize = "full";
+			}
+	
+			//the documentation for wp_get_attachment_image_src says you can pass in an array of width and height but that didn't seem to work.
+			//It just returned the size closest to the values I passed in so we are stuck with the four options: thumbnail, medium, large or full
+			$arr = wp_get_attachment_image_src(get_post_thumbnail_id($this->page->ID), $imageSize);
+	
+			$imageUrl = $arr[0];
+		}
+	
+		//if we couldn't find an image and we have an "extract" paramater, search the page content for an image tag and extract its url
+		if ($imageUrl == "" && $mode != "none")
+		{
+			//found two regex's to do this. Not sure which is better so I randomly picked the second one
+			//both only grab the first image in the page so I'm not able to do the option where it can randomly select an image from the page instead of just the first one
+			//$postImages = preg_match_all('/<img.+src=[\'"]([^\'"]+)[\'"].*>/i', $this->page->post_content, $postMatches);
+			$postImages = preg_match_all("/<img .*?(?=src)src=\"([^\"]+)\"/si", $this->page->post_content, $postMatches);
+	
+			//I couldn't find a way to get the image ID without doing a whole other query so unfortunately we are stuck with the image as it appears in the page and the size parameter does not work here
+	
+			//if we found an image tag with url
+			if(isset($postMatches[1]) && isset($postMatches[1][0]))
+			{
+				$imageUrl = $postMatches[1][0];
+			}
+		}
+	
+		return $imageUrl;
 	}
 }
 

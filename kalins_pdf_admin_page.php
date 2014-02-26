@@ -315,7 +315,7 @@ jQuery(document).ready(function($){
         <li><b>[blog_description]</b> - description of the blog</li>
         <li><b>[blog_url]</b> - blog base url</li>
         <li><b>[ID]</b> - the ID number of the page/post</li>
-        <li><b>[post_author]</b> - author of the page/post</li>
+        <li><b>[post_author type="display_name"]</b> - post author information. Possible types: ID, user_login, user_pass, user_nicename, user_email, user_url, display_name, user_firstname, user_lastname, nickname, description, primary_blog</li>
         <li><b>[post_permalink]</b> - the page permalink</li>
         <li><b>[post_date format="m-d-Y"]</b> - date page/post was created <b>*</b></li>
         <li><b>[post_date_gmt format="d-m-Y"]</b> - date page/post was created in gmt time <b>*</b></li>
@@ -331,7 +331,7 @@ jQuery(document).ready(function($){
         <li><b>[post_categories delimeter=", " links="true"]</b> - post categories list. Parameters work like tag shortcode.</li>
         <li><b>[post_parent link="true"]</b> - post parent. Use optional 'link' parameter to turn off link</li>
         <li><b>[post_comments before="" after=""]</b> - post comments. Parameters represent text/HTML that will be inserted before and after comment list but will not be displayed if there are no comments. PHP coders: <a href="http://kalinbooks.com/2011/customize-comments-pdf-creation-station">learn how to customize comment display.</a></li>
-        <li><b>[post_thumb]</b> - URL to the page/post's featured image (requires theme support)</li>
+        <li><b>[post_thumb size="full" extract="none"]</b> - URL to the page/post's featured image (requires theme support). Possible size paramaters: "thumbnail", "medium", "large" or "full". Possible extract prameters: "on" or "force". Setting extract to "on" will cause the shortcode to attempt to pull the first image from within the post if it cannot find a featured image. Using "force" will cause it to ignore the featured image altogether. Extracted images always return at the same size they appear in the post.</li>
         </ul></p>
         <p><b>*</b> Time shortcodes have an optional format parameter. Format your dates using these possible tokens: m=month, M=text month, F=full text month, d=day, D=short text Day Y=4 digit year, y=2 digit year, H=hour, i=minute, s=seconds. More tokens listed here: <a href="http://codex.wordpress.org/Formatting_Date_and_Time" target="_blank">http://codex.wordpress.org/Formatting_Date_and_Time.</a> </p>
         
