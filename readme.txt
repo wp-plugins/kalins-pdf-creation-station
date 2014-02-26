@@ -2,7 +2,7 @@
 Contributors: kalinbooks
 Tags: PDF, document, export, print, pdf, creation
 Requires at least: 3.0
-Tested up to: 3.1
+Tested up to: 3.8.1
 Stable tag: trunk
 
 Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
@@ -129,6 +129,10 @@ removed testing alerts
 *Fixed 'create PDF' popup in Firefox
 *Changed default font to Times and default size to 12, which improves overall look/feel of documents
 
+= 3.2 =
+*Upgraded TCPDF engine to 6.0.061. PDF compiling should be faster and more reliable now. We may get other bonuses with this upgrade as well.
+*Added new options for post author so you are no longer stuck with just the login name
+*Expanded functionality for post thumbnail shortcode
 
 == Upgrade Notice ==
 
@@ -170,6 +174,9 @@ Some new shortcodes, features and other improvements. New Table of Contents feat
 
 = 3.1 =
 Firefox fix and PDF font change to Times so PDFs should look a little better 
+
+= 3.2 =
+After all this time, finally releasing a small update. Should work a little faster. New author and thumbnail options.
 
 == About ==
 
