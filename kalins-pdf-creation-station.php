@@ -331,8 +331,9 @@ function kalinsPDF_content_filter($content){
 function kalins_pdf_contextual_help($contextual_help, $screen_id, $screen) {
 	global $kPDFadminPage;
 	if($screen_id == $kPDFadminPage){
-		$helpFile = DOMDocument::loadHTMLFile(WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_admin_help.html');
-		$contextual_help = $helpFile->saveHTML();
+		$doc = new DOMDocument();
+	  $toolHelpFile = $doc->loadHTMLFile(WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_admin_help.html');
+		$contextual_help = $doc->saveHTML();
 	}else{
 		global $kPDFtoolPage;
 		if($screen_id == $kPDFtoolPage){
