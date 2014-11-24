@@ -208,3 +208,10 @@ Major user interface redesign. Improved page/post sorting on the tool page. Adde
 
 If you find this plugin useful, please pay it forward to the community.
 
+
+
+
+
+
+
+          
