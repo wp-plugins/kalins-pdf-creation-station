@@ -60,7 +60,6 @@ In both the settings and tool pages you can find help in the built-in wordpress 
 
 Make sure to use double quotes instead of single quotes when inserting arbitrary HTML attributes because of a bug with the core PDF creation engine (TCPDF).
 
-
 == Screenshots ==
 
 1. A portion of the creator tool that creates custom PDF documents from multiple pages and posts. This shows the post list section and some collapsed sections.
@@ -208,10 +207,3 @@ Major user interface redesign. Improved page/post sorting on the tool page. Adde
 
 If you find this plugin useful, please pay it forward to the community.
 
-
-
-
-
-
-
-          
