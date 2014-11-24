@@ -1,15 +1,13 @@
 <?php
 /*
 Plugin Name: Kalin's PDF Creation Station
-Version: 3.2
+Version: 4.0
 Plugin URI: http://kalinbooks.com/pdf-creation-station/
 Description: Build highly customizable PDF documents from any combination of pages and posts, or add a link to any page to download a PDF of that post.
 Author: Kalin Ringkvist
 Author URI: http://kalinbooks.com/
 
 Kalin's PDF Creation station by Kalin Ringkvist (email: kalin@kalinflash.com)
-
-Thanks to Marcos Rezende's Blog as PDF and Aleksander Stacherski's AS-PDF plugins which provided a great starting point.
 
 License:
 This program is free software; you can redistribute it and/or modify
@@ -91,8 +89,10 @@ function kalins_pdf_tool_page() {//load php that builds our tool page
 	require_once( WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_tool_page.php');
 }
 
+//runs on every admin page
 function kalins_pdf_admin_init(){
 	
+	//not sure why the ajax connections stopped working when put into kalins_admin_page_loaded so they remain here
 	//creation tool ajax connections
 	add_action('wp_ajax_kalins_pdf_tool_create', 'kalins_pdf_tool_create');
 	add_action('wp_ajax_kalins_pdf_tool_delete', 'kalins_pdf_tool_delete');
@@ -102,13 +102,10 @@ function kalins_pdf_admin_init(){
 	add_action('wp_ajax_kalins_pdf_reset_admin_defaults', 'kalins_pdf_reset_admin_defaults');//kalins_pdf_admin_save
 	add_action('wp_ajax_kalins_pdf_admin_save', 'kalins_pdf_admin_save');
 	add_action('wp_ajax_kalins_pdf_create_all', 'kalins_pdf_create_all');
-	
-	//add_action('contextual_help', 'kalins_pdf_contextual_help', 10, 2);
-	
-	register_deactivation_hook( __FILE__, 'kalins_pdf_cleanup' );
-	
-	wp_register_style('kalinPDFStyle', WP_PLUGIN_URL . '/kalins-pdf-creation-station/kalins_pdf_styles.css');
 
+	//TODO: this should be in a add_meta_boxes action instead of admin_init; need to figure out why that action doesn't work
+	add_meta_box( "kalinsPDFNavMenu", "PDF Creation Station", 'kalinsPDF_nav_menu_box', 'nav-menus', 'side');
+	
 	//--------------you may comment-out the foreach loop if you are using hard-coded PDF links in your theme. This will make your admin panels run slightly more efficiently.-------------
 	
 	$post_types = get_post_types('','names'); 
@@ -120,15 +117,78 @@ function kalins_pdf_admin_init(){
 	//--------------------------------
 }
 
-function kalins_pdf_configure_pages() {
+//show the new meta_box in the Appearance->Menus admin page
+function kalinsPDF_nav_menu_box(){    			
+	$count = 1;
 	
+	if ($handle = opendir(KALINS_PDF_DIR)) {
+		//echo '<ul id ="wishlist-login-checklist" class="categorychecklist form-no-clear">';
+		while (false !== ($file = readdir($handle))) {
+			//loop to find all relevant files (stripos is not case sensitive so it finds .PDF, .HTML, .TXT)
+			if ($file != "." && $file != ".." && (stripos($file, ".pdf") > 0 || stripos($file, ".html") > 0 || stripos($file, ".txt") > 0  )) {
+				
+				if($count === 1){
+					echo '<div id="posttype-wl-login" class="posttypediv">
+									<div id="tabs-panel-wishlist-login" class="tabs-panel tabs-panel-active">
+										<ul id ="wishlist-login-checklist" class="categorychecklist form-no-clear">';
+				}
+				
+				//for each file, echo the checkbox with $file label and all the hidden fields needed for the wordpress nav-menu admin to work properly
+				echo '<li>
+        			  <label class="menu-item-title"><input type="checkbox" class="menu-item-checkbox" name="menu-item[' .$count .'][menu-item-object-id]" value="' .$count .'"> ' .$file .'</label>
+        				<input type="hidden" class="menu-item-type" name="menu-item[' .$count .'][menu-item-type]" value="custom">
+        				<input type="hidden" class="menu-item-title" name="menu-item[' .$count .'][menu-item-title]" value="' .$file .'">
+        				<input type="hidden" class="menu-item-url" name="menu-item[' .$count .'][menu-item-url]" value="' .KALINS_PDF_URL .$file .'">
+        				<input type="hidden" class="menu-item-classes" name="menu-item[' .$count .'][menu-item-classes]" value="wl-login-pop">
+        			</li>';
+				
+				$count++;
+			}
+		}
+		closedir($handle);
+		
+		if($count > 1){
+			//echo closing tags and the submit button and 'select all' button. nothing dynamic here.
+			echo '</ul>
+			  </div>
+			  <p class="button-controls">
+			    <span class="list-controls">
+			      <a href="/wordpress/wp-admin/nav-menus.php?page-tab=all&amp;selectall=1#posttype-wl-login" class="select-all">Select All</a>
+			    </span>
+			    <span class="add-to-menu">
+			      <input type="submit" class="button-secondary submit-add-to-menu right" value="Add to Menu" name="add-post-type-menu-item" id="submit-posttype-wl-login">
+			    	<span class="spinner"></span>
+			    </span>
+			  </p>
+			</div>';
+		}else{
+			//if we did not find any files
+			echo "You need to create some PDF files in <a href='tools.php?page=kalins-pdf-tool'>Tools-&#62;PDF Creation Station.</a>";
+		}
+	}else{
+		//if we did not find the directory
+		echo "You need to create some PDF files in <a href='tools.php?page=kalins-pdf-tool' >Tools-&#62;PDF Creation Station.</a>";
+	}
+	
+}
+
+//runs on every admin page
+function kalins_pdf_configure_pages() {
 	global $kPDFadminPage;
 	
 	$kPDFadminPage = add_submenu_page('options-general.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', 'kalins-pdf-admin', 'kalins_pdf_admin_page');
+	add_action( 'load-' . $kPDFadminPage , 'kalins_admin_page_loaded' );
 	
 	global $kPDFtoolPage;
 	
 	$kPDFtoolPage = add_submenu_page('tools.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', 'kalins-pdf-tool', 'kalins_pdf_tool_page');
+	add_action( 'load-' . $kPDFtoolPage , 'kalins_admin_page_loaded' );
+}
+
+//runs just on our tool and settings page
+function kalins_admin_page_loaded(){	
+	global $kPDFadminPage;
+	global $kPDFtoolPage;
 	
 	add_action( "admin_print_scripts-$kPDFadminPage", 'kalins_pdf_admin_head' );
 	add_action('admin_print_styles-' . $kPDFadminPage, 'kalins_pdf_admin_styles');
@@ -137,31 +197,43 @@ function kalins_pdf_configure_pages() {
 	add_action('admin_print_styles-' . $kPDFtoolPage, 'kalins_pdf_admin_styles');
 	
 	add_filter('contextual_help', 'kalins_pdf_contextual_help', 10, 3);
-}
-
-function kalins_pdf_admin_head() {
 	
-	//echo "My plugin admin head";
-	wp_enqueue_script("jquery");
-	wp_enqueue_script("jquery-ui-sortable");
-	wp_enqueue_script("jquery-ui-dialog");
+	wp_register_style('kalinPDFBootstrapStyle', '//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css');
+	
+	wp_register_style('kalinPDFStyle', WP_PLUGIN_URL . '/kalins-pdf-creation-station/kalins_pdf_styles.css');
+	
+	wp_register_script( 'kalinPDFAngularJS', WP_PLUGIN_URL . '/kalins-pdf-creation-station/vendor/angular.js' );
+	wp_register_script( 'kalinPDF_ng-table', WP_PLUGIN_URL . '/kalins-pdf-creation-station/vendor/ng-table.js' );
+	wp_register_script( 'kalinPDF_angular-ui', WP_PLUGIN_URL . '/kalins-pdf-creation-station/vendor/angular-ui-sortable.js' );
+	
+	wp_register_script( 'kalinPDF_angular-bootstrap', WP_PLUGIN_URL . '/kalins-pdf-creation-station/vendor/ui-bootstrap-tpls-0.11.2.js' );
+	
+	wp_register_script( 'kalinPDF_KalinsUIService', WP_PLUGIN_URL . '/kalins-pdf-creation-station/KalinsUIService.js' );
 }
 
-function kalins_pdf_admin_styles(){//not sure why this didn't work if called from pdf_admin_head
+function kalins_pdf_admin_head() {	
+	wp_enqueue_script("jquery-ui-sortable");
+	wp_enqueue_script( 'kalinPDFAngularJS' );
+	wp_enqueue_script( 'kalinPDF_ng-table' );
+	wp_enqueue_script( 'kalinPDF_KalinsUIService' );
+	wp_enqueue_script( 'kalinPDF_angular-ui' );
+	wp_enqueue_script( 'kalinPDF_angular-bootstrap' );
+}
+
+function kalins_pdf_admin_styles(){//not sure why this didn't work if called from pdf_admin_head		
+	wp_enqueue_style('kalinPDFBootstrapStyle');
 	wp_enqueue_style('kalinPDFStyle');
 }
 
 function kalinsPDF_inner_custom_box($post) {//creates the box that goes on the post/page edit page
-  	// show nonce for verification and post box label
-  	echo '<input type="hidden" name="kalinsPDF_noncename" id="kalinsPDF_noncename" value="' .wp_create_nonce( plugin_basename(__FILE__) ) . '" />Create PDF of this page? <br />';
+  // show nonce for verification and post box label
+  echo '<input type="hidden" name="kalinsPDF_noncename" id="kalinsPDF_noncename" value="' .wp_create_nonce( plugin_basename(__FILE__) ) . '" />Create PDF of this page? <br />';
 	
 	$meta = json_decode(get_post_meta($post->ID, "kalinsPDFMeta", true));//grab meta from this particular post
 	
 	if($meta){//if that meta exists, set $showLink
 		$showLink = $meta->showLink;
 	}else{//if there is no meta for this page/post yet, grab the default
-		//$adminOptions = kalins_pdf_get_admin_options();
-		//$showLink = $adminOptions['showLink'];
 		$showLink = "default";
 	}
 	
@@ -208,7 +280,7 @@ function kalinsPDF_save_postdata( $post_id ) {
 		}
 	}
 
-  	// OK, we're authenticated: we need to find and save the data
+  // OK, we're authenticated: we need to find and save the data
 	$meta = new stdClass();
 	$meta->showLink = $_POST['kalinsPDFLink'];
 	
@@ -256,16 +328,18 @@ function kalinsPDF_publish_post( $post_id ){
 	return;
 }
 
+// This is very similar to widget() but with important differences. If you make any changes here, make
+// sure they don't also need to be made there
 function kalinsPDF_content_filter($content){
 	
+	//set in kalins_pdf_create.php, in case the user just clicked a split second earlier and it's still processing
 	global $kalinsPDFRunning;
-	
 	if(isset($kalinsPDFRunning)){
 		return $content;
 	}
 	
 	$adminOptions = kalins_pdf_get_admin_options();
-	
+	//TODO: check for and skip private post (not sure if I need to. look into this once you're not using a symlink)
 	if($adminOptions['showOnMulti'] == "false" && !is_single() && !is_page()){//if we're not on a single page/post we don't need to do anything else
 		return $content;
 	}
@@ -301,13 +375,11 @@ function kalinsPDF_content_filter($content){
 		$postID = "po_" .$postID;
 	}
 	
-	//-------remove these three lines if you aren't using shortcodes in the link and you want to conserve processing power
 	$adminOptions["beforeLink"] = kalins_pdf_page_shortcode_replace($adminOptions["beforeLink"], $post);
 	$adminOptions["linkText"] = kalins_pdf_page_shortcode_replace($adminOptions["linkText"], $post);
 	$adminOptions["afterLink"] = kalins_pdf_page_shortcode_replace($adminOptions["afterLink"], $post);
-    //-------
 	
-    $strHtml = $adminOptions["beforeLink"] .'<a href="' . get_bloginfo('wpurl') . '/wp-content/plugins/kalins-pdf-creation-station/kalins_pdf_create.php?singlepost=' .$postID .'" target="_blank" >' .$adminOptions["linkText"] .'</a>' .$adminOptions["afterLink"];
+  $strHtml = $adminOptions["beforeLink"] .'<a href="' . get_bloginfo('wpurl') . '/wp-content/plugins/kalins-pdf-creation-station/kalins_pdf_create.php?singlepost=' .$postID .'" target="_blank" >' .$adminOptions["linkText"] .'</a>' .$adminOptions["afterLink"];
     
 	switch($showLink){//return the content with the link attached above or below
 		case "top":
@@ -316,17 +388,6 @@ function kalinsPDF_content_filter($content){
 			return $content .$strHtml;
 	}
 }
-
-/*function kalins_pdf_contextual_help($text, $screen) {
-	if (strcmp($screen, 'settings_page_kalins-pdf-creation-station/kalins-pdf-creation-station') == 0 ) {//if we're on settings page, add setting help and return
-		require_once( WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_admin_help.php');
-		return;
-	}
-	
-	if (strcmp($screen, 'tools_page_kalins-pdf-creation-station/kalins-pdf-creation-station') == 0 ) {//otherwise show the tool help page (the two help files are very similar but have a few important differences)
-		require_once( WP_PLUGIN_DIR . '/kalins-pdf-creation-station/kalins_pdf_tool_help.php');
-	}
-}*/
 
 function kalins_pdf_contextual_help($contextual_help, $screen_id, $screen) {
 	global $kPDFadminPage;
@@ -353,13 +414,7 @@ function kalins_pdf_reset_admin_defaults(){//called when user clicks the reset b
 	$kalinsPDFAdminOptions = kalins_pdf_getAdminSettings();
 	update_option(KALINS_PDF_ADMIN_OPTIONS_NAME, $kalinsPDFAdminOptions);
 	
-	//$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/singles/';//we delete all cached single pdf files since the defaults have probably changed
-	//$pdfDir = $pdfDirBase .'singles/';
-	//$uploads = wp_upload_dir();
-	//$pdfDir = $uploads['basedir'].'/kalins-pdf/singles/';
-	
 	$pdfDir = KALINS_PDF_SINGLES_DIR;
-	
 	
 	if ($handle = opendir($pdfDir)) {//open pdf directory
 		while (false !== ($file = readdir($handle))) {
@@ -369,60 +424,51 @@ function kalins_pdf_reset_admin_defaults(){//called when user clicks the reset b
 		}
 		closedir($handle);
 	}
-	echo json_encode($kalinsPDFAdminOptions);
+	die(json_encode($kalinsPDFAdminOptions));
 }
 
 function kalins_pdf_admin_save(){
 	
 	check_ajax_referer( "kalins_pdf_admin_save" );
 	
-	$outputVar = new stdClass();
-	
 	$kalinsPDFAdminOptions = array();//collect our passed in values so we can save them for next time
 	
-	$kalinsPDFAdminOptions["beforePage"] = stripslashes($_POST['beforePage']);
-	$kalinsPDFAdminOptions["beforePost"] = stripslashes($_POST['beforePost']);
-	$kalinsPDFAdminOptions["afterPage"] = stripslashes($_POST['afterPage']);
-	$kalinsPDFAdminOptions["afterPost"] = stripslashes($_POST['afterPost']);
-	$kalinsPDFAdminOptions["titlePage"] = stripslashes($_POST['titlePage']);
-	$kalinsPDFAdminOptions["finalPage"] = stripslashes($_POST['finalPage']);
-	$kalinsPDFAdminOptions["headerTitle"] = stripslashes($_POST['headerTitle']);
-	$kalinsPDFAdminOptions["headerSub"] = stripslashes($_POST['headerSub']);
+	$kalinsPDFAdminOptions["beforePage"] =      stripslashes($_REQUEST['beforePage']);
+	$kalinsPDFAdminOptions["beforePost"] =      stripslashes($_REQUEST['beforePost']);
+	$kalinsPDFAdminOptions["afterPage"] =       stripslashes($_REQUEST['afterPage']);
+	$kalinsPDFAdminOptions["afterPost"] =       stripslashes($_REQUEST['afterPost']);
+	$kalinsPDFAdminOptions["titlePage"] =       stripslashes($_REQUEST['titlePage']);
+	$kalinsPDFAdminOptions["finalPage"] =       stripslashes($_REQUEST['finalPage']);
+	$kalinsPDFAdminOptions["headerTitle"] =     stripslashes($_REQUEST['headerTitle']);
+	$kalinsPDFAdminOptions["headerSub"] =       stripslashes($_REQUEST['headerSub']);
 	
-	$kalinsPDFAdminOptions['linkText'] = stripslashes($_POST['linkText']);
-	$kalinsPDFAdminOptions['beforeLink'] = stripslashes($_POST['beforeLink']);
-	$kalinsPDFAdminOptions['afterLink'] = stripslashes($_POST['afterLink']);
+	$kalinsPDFAdminOptions['linkText'] =        stripslashes($_REQUEST['linkText']);
+	$kalinsPDFAdminOptions['beforeLink'] =      stripslashes($_REQUEST['beforeLink']);
+	$kalinsPDFAdminOptions['afterLink'] =       stripslashes($_REQUEST['afterLink']);
 	
-	$kalinsPDFAdminOptions["fontSize"] = (int) $_POST['fontSize'];
-	$kalinsPDFAdminOptions['wordCount'] = (int) stripslashes($_POST['wordCount']);
+	$kalinsPDFAdminOptions["fontSize"] =        (int) $_REQUEST['fontSize'];
+	$kalinsPDFAdminOptions['wordCount'] =       (int) stripslashes($_REQUEST['wordCount']);
 	
-	$kalinsPDFAdminOptions['showLink'] = stripslashes($_POST['showLink']);
+	$kalinsPDFAdminOptions['showLink'] =        stripslashes($_REQUEST['showLink']);
+		
+	$kalinsPDFAdminOptions["includeImages"] =   ($_REQUEST['includeImages'] === "true");//convert these "true"/"false" strings to booleans
+	$kalinsPDFAdminOptions["runShortcodes"] =   ($_REQUEST['runShortcodes'] === "true");
+	$kalinsPDFAdminOptions["runFilters"] =      ($_REQUEST['runFilters'] === "true");
 	
-	//echo "AAAAH" .$kalinsPDFAdminOptions['showLink'] ."dkdkdk";
+	$kalinsPDFAdminOptions["convertYoutube"] =  ($_REQUEST['convertYoutube'] === "true");
+	$kalinsPDFAdminOptions["convertVimeo"] =    ($_REQUEST['convertVimeo'] === "true");
+	$kalinsPDFAdminOptions["convertTed"] =      ($_REQUEST['convertTed'] === "true");
 	
-	$kalinsPDFAdminOptions["includeImages"] = stripslashes($_POST['includeImages']);
-	$kalinsPDFAdminOptions["runShortcodes"] = stripslashes($_POST['runShortcodes']);
-	$kalinsPDFAdminOptions["runFilters"] = stripslashes($_POST['runFilters']);
+	$kalinsPDFAdminOptions["showOnMulti"] =     ($_REQUEST['showOnMulti'] === "true");
+	$kalinsPDFAdminOptions["filenameByTitle"] = ($_REQUEST['filenameByTitle'] === "true");
+	$kalinsPDFAdminOptions["autoGenerate"] =    ($_REQUEST['autoGenerate'] === "true");
 	
-	$kalinsPDFAdminOptions["convertYoutube"] = stripslashes($_POST['convertYoutube']);
-	$kalinsPDFAdminOptions["convertVimeo"] = stripslashes($_POST['convertVimeo']);
-	$kalinsPDFAdminOptions["convertTed"] = stripslashes($_POST['convertTed']);
+	//$kalinsPDFAdminOptions["includeTables"] = ($_REQUEST['includeTables'] === "true");
 	
-	$kalinsPDFAdminOptions["showOnMulti"] = stripslashes($_POST['showOnMulti']);
-	$kalinsPDFAdminOptions["filenameByTitle"] = stripslashes($_POST['filenameByTitle']);
-	$kalinsPDFAdminOptions["autoGenerate"] = stripslashes($_POST['autoGenerate']);
-	
-	//$kalinsPDFAdminOptions["includeTables"] = stripslashes($_POST['includeTables']);
-	
-	$kalinsPDFAdminOptions["doCleanup"] = stripslashes($_POST['doCleanup']);
-	
-	
+	$kalinsPDFAdminOptions["doCleanup"] =       ($_REQUEST['doCleanup'] === "true");
+		
 	update_option(KALINS_PDF_ADMIN_OPTIONS_NAME, $kalinsPDFAdminOptions);//save options to database
-	
-	//$pdfDir = WP_PLUGIN_DIR . '/kalins-pdf-creation-station/pdf/singles/';
-	//$pdfDir = $pdfDirBase .'singles/';
-	//$uploads = wp_upload_dir();
-	//$pdfDir = $uploads['basedir'].'/kalins-pdf/singles/';
+
 	$pdfDir = KALINS_PDF_SINGLES_DIR;
 	
 	if ($handle = opendir($pdfDir)) {//open pdf directory
@@ -432,19 +478,17 @@ function kalins_pdf_admin_save(){
 			}
 		}
 		closedir($handle);
-		$outputVar->status = "success";
+		die("success");
 	}else{
-		$outputVar->status = "fail";
+		die("Save failed for unknown reason.");
 	}
-	
-	echo json_encode($outputVar);
 }
 
 function kalins_pdf_tool_defaults(){//called when user clicks the reset button
 	check_ajax_referer( "kalins_pdf_tool_reset" );
 	$kalinsPDFAdminOptions = kalins_pdf_getDefaultOptions();
 	update_option(KALINS_PDF_TOOL_OPTIONS_NAME, $kalinsPDFAdminOptions);
-	echo json_encode($kalinsPDFAdminOptions);
+	die(json_encode($kalinsPDFAdminOptions));
 }
 
 function kalins_pdf_tool_create(){//called from create button
@@ -456,14 +500,15 @@ function kalins_pdf_tool_delete(){//called from either the "Delete All" button o
 	
 	check_ajax_referer( "kalins_pdf_tool_delete" );
 	$outputVar = new stdClass();
-	$fileName = $_POST["filename"];
+	$filename = $_REQUEST["filename"];
 	
 	$pdfDir = KALINS_PDF_DIR;
 		
-	if($fileName == "all"){//if we're deleting all of them
+	if($filename == "all"){//if we're deleting all of them
 		if ($handle = opendir($pdfDir)) {//open pdf directory
 			while (false !== ($file = readdir($handle))) {
-				if ($file != "." && $file != ".." && substr($file, stripos($file, ".")+1, 3) == "pdf") {//loop to find all relevant files 
+				//loop to find all relevant files
+				if ($file != "." && $file != ".." && (stripos($file, ".pdf") > 0 || stripos($file, ".html") > 0 || stripos($file, ".txt") > 0)) { 
 					unlink($pdfDir .$file);//and delete them
 				}
 			}
@@ -473,15 +518,15 @@ function kalins_pdf_tool_delete(){//called from either the "Delete All" button o
 			$outputVar->status = "fail";
 		}
 	}else{
-		$fileName = $pdfDir .$fileName;
-		if(file_exists($fileName)){
-			unlink($fileName);//delete only the file passed in
+		$filename = $pdfDir .$filename;
+		if(file_exists($filename)){
+			unlink($filename);//delete only the file passed in
 			$outputVar->status = "success";
 		}else{
 			$outputVar->status = "fail";
 		}
 	}
-	echo json_encode($outputVar);
+	die(json_encode($outputVar));
 }
 
 function kalins_pdf_create_all(){
@@ -497,47 +542,18 @@ function kalins_pdf_create_all(){
 	
 	$myPosts = get_posts('numberposts=-1&post_type=any');
  	foreach($myPosts as $post) {
-    	if(kalinsPDF_build_pdf($post)){
-			$postCount = $postCount + 1;
+    if(kalinsPDF_build_pdf($post)){
+		  $postCount = $postCount + 1;
 			if($postCount == $postLimit){
 				break;
 			}
 		}
 	}
 	
-	/*if($postCount < $postLimit){ 
-		$myPosts = get_posts('numberposts=-1&post_type=page');
-		foreach($myPosts as $post) {
-			if(kalinsPDF_build_pdf($post)){
-				$postCount = $postCount + 1;
-				if($postCount == $postLimit){
-					break;
-				}
-			}
-		}
-	}*/
-	
-	
-	/*if(false){
-		$outputVar->status = "success";
-	}else{
-		$outputVar->status = "fail";
-	}*/
-	
-	/*if($postCount == $postLimit){
-		$outputVar->complete = "true";
-	}else{
-		$outputVar->complete = "";
-	}*/
-	
-	//$outputVar->complete = ($postCount == $postLimit);
-	
 	$outputVar->createCount = $postCount;
 	
 	$outputVar->totalCount = wp_count_posts("post")->publish + wp_count_posts("page")->publish;
-	
-	
-	
+
 	$existCount = 0;
 	
 	if ($handle = opendir($pdfDir)) {//open pdf directory
@@ -552,14 +568,14 @@ function kalins_pdf_create_all(){
 	$outputVar->existCount = $existCount;
 	
 	$outputVar->status = "success";
-	echo json_encode($outputVar);
+	die(json_encode($outputVar));
 }
 
 function kalinsPDF_build_pdf( $post ){
 	
 	$pdfDir = KALINS_PDF_SINGLES_DIR;
-	
-	$fileName = $post_id .'.pdf';
+		
+	$fileName = $post->post_name .'.pdf';
 	
 	if(file_exists($pdfDir .$fileName)){//if the pdf file for this page already exists,
 		return false;
@@ -627,7 +643,7 @@ function kalins_pdf_get_admin_options() {
 function kalins_pdf_getAdminSettings(){//simply returns all our default option values
 	$kalinsPDFAdminOptions = array('headerTitle' => '[post_title] - [post_date]',
 		'headerSub' => 'by [post_author] - [blog_name] - [blog_url]',
-		'includeImages' => 'false');
+		'includeImages' => false);
 	$kalinsPDFAdminOptions['beforePage'] = '<h1>[post_title]</h1><p><b>by [post_author] - [post_date  format="l, F d, Y"]</b></p><p><a href="[post_permalink]">[post_permalink]</a></p>';
 	$kalinsPDFAdminOptions['beforePost'] = '<h1>[post_title]</h1><p><b>by [post_author] - [post_date  format="l, F d, Y"]</b></p><p><a href="[post_permalink]">[post_permalink]</a></p>';;
 	$kalinsPDFAdminOptions['afterPage'] = '<p align="center">_______________________________________________</p><p align="center">PDF generated by Kalin\'s PDF Creation Station</p>';
@@ -635,20 +651,20 @@ function kalins_pdf_getAdminSettings(){//simply returns all our default option v
 	$kalinsPDFAdminOptions['titlePage'] = '';
 	$kalinsPDFAdminOptions['finalPage'] = '';
 	$kalinsPDFAdminOptions['fontSize'] = 12;
-	$kalinsPDFAdminOptions["runShortcodes"] = "false";
-	$kalinsPDFAdminOptions["runFilters"] = "false";
-	$kalinsPDFAdminOptions["convertYoutube"] = "true";
-	$kalinsPDFAdminOptions["convertVimeo"] = "true";
-	$kalinsPDFAdminOptions["convertTed"] = "true";
+	$kalinsPDFAdminOptions["runShortcodes"] = false;
+	$kalinsPDFAdminOptions["runFilters"] = false;
+	$kalinsPDFAdminOptions["convertYoutube"] = true;
+	$kalinsPDFAdminOptions["convertVimeo"] = true;
+	$kalinsPDFAdminOptions["convertTed"] = true;
 	
-	$kalinsPDFAdminOptions["autoGenerate"] = "false";
+	$kalinsPDFAdminOptions["autoGenerate"] = false;
 	$kalinsPDFAdminOptions['showLink'] = "none";
-	$kalinsPDFAdminOptions["filenameByTitle"] = "true";
-	$kalinsPDFAdminOptions["showOnMulti"] = "false";//filenameByTitle
+	$kalinsPDFAdminOptions["filenameByTitle"] = true;
+	$kalinsPDFAdminOptions["showOnMulti"] = false;
 	$kalinsPDFAdminOptions['linkText'] = "Download [post_title] as PDF";
 	$kalinsPDFAdminOptions['beforeLink'] = '<br/><p align="right">-- ';
 	$kalinsPDFAdminOptions['afterLink'] = " --</p><br/>";
-	$kalinsPDFAdminOptions['doCleanup'] = "true";
+	$kalinsPDFAdminOptions['doCleanup'] = true;
 	$kalinsPDFAdminOptions['wordCount'] = 0;
 	
 	return $kalinsPDFAdminOptions;
@@ -666,14 +682,17 @@ function kalins_pdf_getDefaultOptions(){//simply returns all our default option 
 	$kalinsPDFAdminOptions['titlePage'] = '<p><font size="40">[blog_name]</font></p><p><font size="25">[blog_description]</font></p><p>PDF generated [current_time format="F d, Y"] by Kalin\'s PDF Creation Station WordPress plugin</p>';
 	$kalinsPDFAdminOptions['finalPage'] = '<b>[blog_name]</b><p><b>[blog_description]</b></p><p>PDF generated [current_time format="F d, Y \a\t g:i A"] by Kalin\'s PDF Creation Station WordPress plugin</p>';
 	$kalinsPDFAdminOptions['fontSize'] = 12;
-	$kalinsPDFAdminOptions["runShortcodes"] = "false";
-	$kalinsPDFAdminOptions["runFilters"] = "false";
-	$kalinsPDFAdminOptions["convertYoutube"] = "true";
-	$kalinsPDFAdminOptions["convertVimeo"] = "true";
-	$kalinsPDFAdminOptions["convertTed"] = "true";
-	$kalinsPDFAdminOptions["autoPageBreak"] = "true";
-	$kalinsPDFAdminOptions["includeTOC"] = "true";
+	$kalinsPDFAdminOptions["runShortcodes"] = false;
+	$kalinsPDFAdminOptions["runFilters"] = false;
+	$kalinsPDFAdminOptions["convertYoutube"] = true;
+	$kalinsPDFAdminOptions["convertVimeo"] = true;
+	$kalinsPDFAdminOptions["convertTed"] = true;
+	$kalinsPDFAdminOptions["autoPageBreak"] = true;
+	$kalinsPDFAdminOptions["includeTOC"] = true;
 	
+	$kalinsPDFAdminOptions["bCreatePDF"] = true;
+	$kalinsPDFAdminOptions["bCreateHTML"] = false;
+	$kalinsPDFAdminOptions["bCreateTXT"] = false;
 	
 	return $kalinsPDFAdminOptions;
 }
@@ -757,10 +776,7 @@ function kalins_pdf_page_shortcode_replace($str, $page){//replace all passed in 
 	
 	$str = preg_replace_callback('#\[ *post_parent *(link=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postParentCallback'), $str);
 	
-	$str = preg_replace_callback('#\[ *post_thumb *(size=[\'|\"]([^\'\"]*)[\'|\"])? *(extract=[\'|\"]([^\'\"]*)[\'|\"])? *\]#',
-			array(&$postCallback, 'postThumbCallback'),
-			$str);
-	
+	$str = preg_replace_callback('#\[ *post_thumb *(size=[\'|\"]([^\'\"]*)[\'|\"])? *(extract=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postThumbCallback'), $str);
 	
 	$str = kalins_pdf_global_shortcode_replace($str);//then parse the global shortcodes
 	
@@ -982,12 +998,8 @@ function kalinsPDF_timeCallback($matches){
 function kalins_pdf_global_shortcode_replace($str){//replace global shortcodes
 	$str = str_replace("[blog_name]", get_option('blogname'), $str);
 	$str = str_replace("[blog_description]", get_option('blogdescription'), $str);
-	$str = str_replace("[blog_url]", get_option('home'), $str);
-	
-	//$str = str_replace("[current_time]", date("Y-m-d H:i:s", time()), $str);
-	
+	$str = str_replace("[blog_url]", get_option('home'), $str);	
 	$str = preg_replace_callback('#\[ *current_time *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', "kalinsPDF_timeCallback", $str);//this one has its own proprietary function so no need for class and parameters
-	
 	return $str;
 }
 
@@ -1003,35 +1015,147 @@ function kalinsPDF_createPDFDir(){
 	}
 }
 
-/*function kalinsPDF_activate(){
-	//echo "test echo";
-	
-	throw new Exception('Division by zero.');
-}*/
-
 //---------------------end utility functions-----------------------------------
 
+class WP_Kalins_PDF_Creation_Station_Widget extends WP_Widget {
+
+	function WP_Kalins_PDF_Creation_Station_Widget() {
+		$widget_ops = array( 'classname' => 'widget_KalinsPDFCreationStation', 'description' => __( "Show a link to the PDF version of the post or page" ) );
+		$this->WP_Widget('kalinsPDFCreationStation', __("PDF Creation Station"), $widget_ops);
+	}
+
+	// This code displays the user-facing widget
+	// This is very similar to kalinsPDF_content_filter but with important differences. If you make any changes here, make
+	// sure they don't also need to be made there
+	function widget($args, $instance) {
+		//set in kalins_pdf_create.php, in case the user just clicked a split second earlier and it's still processing
+		global $kalinsPDFRunning;
+		if(isset($kalinsPDFRunning)){
+			return "";
+		}
+		
+		if(!is_single() && !is_page()){//if we're not on a page or post we don't show the widget
+			return "";
+		}
+		
+		$adminOptions = kalins_pdf_get_admin_options();
+		
+		global $post;
+		
+		$meta = json_decode(get_post_meta($post->ID, "kalinsPDFMeta", true));
+		
+		if($meta){
+			$showLink = $meta->showLink;
+		}
+		
+		if(!$meta || $showLink == "default"){
+			if(str_word_count(strip_tags($post->post_content)) > $adminOptions['wordCount']){//if this post is longer than the minimum word count
+				$showLink = $adminOptions['showLink'];
+			}else{
+				return "";//if it's not long enough, just quit
+			}
+		}
+		
+		if($showLink === "none"){//if we don't want a link or if we're not on a single page/post we don't need to do anything else
+			return "";
+		}
+		
+		//at this point we know we're going to show a link
+		extract($args);
+
+		//change postID to identify if it's a page or post for use by our create script
+		$postID = $post->ID;
+		if($post->post_type == "page"){
+			$postID = "pg_" .$postID;
+		}else{
+			$postID = "po_" .$postID;
+		}
+
+		//if we have not saved an option, use the default and run it's shortcode conversion; else grab the widget setting and run its shortcode conversion
+		if(empty($instance['beforeLink'])){
+			$adminOptions["beforeLink"] = kalins_pdf_page_shortcode_replace($adminOptions["beforeLink"], $post);
+		}else{
+			$adminOptions["beforeLink"] = kalins_pdf_page_shortcode_replace($instance["beforeLink"], $post);
+		}
+		
+		if(empty($instance['linkText'])){
+			$adminOptions["linkText"] = kalins_pdf_page_shortcode_replace($adminOptions["linkText"], $post);				
+		}else{
+			$adminOptions["linkText"] = kalins_pdf_page_shortcode_replace($instance["linkText"], $post);
+		}
+		
+		if(empty($instance['afterLink'])){
+			$adminOptions["afterLink"] = kalins_pdf_page_shortcode_replace($adminOptions["afterLink"], $post);				
+		}else{
+			$adminOptions["afterLink"] = kalins_pdf_page_shortcode_replace($instance["afterLink"], $post);
+		}
+		
+		//begin echoing content to user-facing widget
+		echo $before_widget;//echo wordpress' standard html
+		if(!empty($instance['title'])) {//only show the title if this widget has one
+			echo $before_title . $instance['title'] . $after_title;
+		}
+		
+		echo $adminOptions["beforeLink"] .'<a href="' . get_bloginfo('wpurl') . '/wp-content/plugins/kalins-pdf-creation-station/kalins_pdf_create.php?singlepost=' .$postID .'" target="_blank" >' .$adminOptions["linkText"] .'</a>' .$adminOptions["afterLink"];
+		echo $after_widget;
+	}
+
+	// Updates the settings.
+	function update($new_instance, $old_instance) {
+		return $new_instance;
+	}
+
+	//this code displays the admin-facing widget interface
+	function form($instance) {
+		echo '<div>';
+		//create three lists of data for each text field
+		$aTextFieldLabels = array("Title:", "Link text:", "Before link:", "After link:");
+		$aTextFieldNames = array("title", "linkText", "beforeLink", "afterLink");
+		$adminOptions = kalins_pdf_get_admin_options();
+		$aTextFieldDefaultValues = array("", $adminOptions["linkText"], $adminOptions["beforeLink"], $adminOptions["afterLink"]);
+		
+		//loop to add each of our four textfields to the widget form
+		for($i=0; $i<4; $i++){
+			$sFieldName = $aTextFieldNames[$i];
+			
+			$sFieldValue = $aTextFieldDefaultValues[$i];
+			//if we have already saved a value, use it instead of the default
+			if(isset($instance[$sFieldName])){
+				$sFieldValue = $instance[$sFieldName];
+			}
+			
+			//apostrophes will mess everything up when echoed, so we escape them
+			$sFieldValue = str_replace("'", "&#39;", $sFieldValue);
+			
+			//begin echoing content to admin-facing interface 
+			echo '<label for="' . $this->get_field_id($sFieldName) .'">' .$aTextFieldLabels[$i] .'</label>';
+			echo '<input type="text" class="widefat" ';
+			echo 'name="' . $this->get_field_name($sFieldName) . '" ';
+			echo 'id="' . $this->get_field_id($sFieldName) . '" ';
+			echo "value='" . $sFieldValue . "' /><br/><br/>";
+		}
+		
+		echo '<br/><br/></div>';
+
+	} // end function form
+
+} // end class WP_Widget_BareBones
 
 //wp actions to get everything started
+
+add_action('widgets_init', create_function('', 'return register_widget("WP_Kalins_PDF_Creation_Station_Widget");'));// Register the widget.
 add_action('admin_init', 'kalins_pdf_admin_init');
 add_action('admin_menu', 'kalins_pdf_configure_pages');
-//add_action( 'init', 'kalins_pdf_init' );//just keep this for whenever we do internationalization - if the function is actually needed, that is.
-
-add_action('publish_post', 'kalinsPDF_publish_post');
-add_action('publish_page', 'kalinsPDF_publish_post');//xmlrpc_publish_post
+add_action('publish_post', 'kalinsPDF_publish_post');//runs action on post publish
+add_action('publish_page', 'kalinsPDF_publish_post');//runs action on page publish
 add_action('xmlrpc_publish_post', 'kalinsPDF_publish_post');
 add_action('publish_future_post', 'kalinsPDF_publish_post');
 
-//add_action('transition_post_status', 'kalinsPDF_publish_post', 1);
-
 add_action('save_post', 'kalinsPDF_save_postdata');
-
 
 //content filter is called whenever a blog page is displayed. Comment this out if you aren't using links applied directly to individual posts, or if the link is set in your theme
 add_filter("the_content", "kalinsPDF_content_filter" );
 
-
-//register_activation_hook( __FILE__, 'kalinsPDF_activate' );
-
+register_uninstall_hook( __FILE__, 'kalins_pdf_cleanup' );
 
 ?>

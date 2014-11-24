@@ -18,16 +18,12 @@ try{
 	require_once('tcpdf/tcpdf.php');
 } catch (Exception $e) {
 	$outputVar->status = "problem loading wp-config or TCPDF library.";
-	echo json_encode($outputVar);
+	die(json_encode($outputVar));
 }
 
 kalinsPDF_createPDFDir();
 
 global $wpdb, $post;
-
-//$uploads = wp_upload_dir();
-//$uploadDir = $uploads['basedir'];
-//$uploadURL = $uploads['baseurl'];
 
 $adminOptions = kalins_pdf_get_admin_options();
 
@@ -45,28 +41,26 @@ if($isSingle){
 	if($adminOptions["filenameByTitle"] == "true"){
 		
 		$singlePost = "";
-		
-		//echo "My page ids " .$pageIDs;
-		
+				
 		if(substr($pageIDs, 0, 2) == "po"){
 			$singlePost = get_post($singleID);
 		}else{
 			$singlePost = get_page($singleID);
 		}
 		
-		$fileName = $singlePost->post_name .'.pdf'; 
+		$filename = $singlePost->post_name;
 		
 	}else{
-		$fileName = $singleID .'.pdf';
+		$filename = $singleID;
 	}
 	
-	if(file_exists($pdfDir .$fileName)){//if the file already exists, simply redirect to that file and we're done
+	if(file_exists($pdfDir .$filename .".pdf")){//if the file already exists, simply redirect to that file and we're done
 		if(!isset($skipReturn)){
-			header("Location: " .$pdfURL .$fileName);
+			header("Location: " .$pdfURL .$filename .".pdf");
 		}
-		return;
+		die();
 	}else{
-		$outputVar->fileName = $fileName;
+		$outputVar->fileName = $filename .".pdf";
 		$outputVar->date = date("Y-m-d H:i:s", time());
 		
 		$adminOptions = kalins_pdf_get_admin_options();//for individual pages/posts we grab all the PDF options from the options page instead of the POST
@@ -92,54 +86,68 @@ if($isSingle){
 		$includeTOC = "false";//singles don't get no Table of contents
 	}
 }else{
-	try{
-		//$pdfDir = $uploadDir .'/kalins-pdf/';
-		
+	try{		
 		$pdfDir = KALINS_PDF_DIR;
 		
-		//echo $pdfDir ." pdf dir!!" .KALINS_PDF_DIR;
-		
-		if($_POST["fileNameCont"] != ""){
-			$fileName = kalins_pdf_global_shortcode_replace($_POST["fileNameCont"]) .".pdf";
+		if($_REQUEST["filename"] != ""){
+			$filename = kalins_pdf_global_shortcode_replace($_REQUEST["filename"]);//&#039;
+			$filename = str_replace("&#039;", "", $filename);//remove all apostrophes from filename
+			$filename = str_replace("\'", "", $filename);
 		}else{
-			$fileName = time() .".pdf";
+			//if user did not enter a filename, we use the current timestamp as a filename (mostly just to streamline testing) 
+			$filename = time();
 		}
 		
-		//$documentType = "html";
-		$pageIDs = stripslashes($_POST["pageIDs"]);
-		$titlePage = stripslashes($_POST['titlePage']);
-		$finalPage = stripslashes($_POST['finalPage']);
-		$beforePage = stripslashes($_POST['beforePage']);
-		$beforePost = stripslashes($_POST['beforePost']);
-		$afterPage = stripslashes($_POST['afterPage']);
-		$afterPost = stripslashes($_POST['afterPost']);
-		$headerTitle = stripslashes($_POST['headerTitle']);
-		$headerSub = stripslashes($_POST['headerSub']);
+		$pageIDs = stripslashes($_REQUEST["pageIDs"]);
+		
+		//TODO: lets see if there's an easier way to compile all these params, like simple JSON
+		
+		$titlePage = stripslashes($_REQUEST['titlePage']);
+		$finalPage = stripslashes($_REQUEST['finalPage']);
+		$beforePage = stripslashes($_REQUEST['beforePage']);
+		$beforePost = stripslashes($_REQUEST['beforePost']);
+		$afterPage = stripslashes($_REQUEST['afterPage']);
+		$afterPost = stripslashes($_REQUEST['afterPost']);
+		$headerTitle = stripslashes($_REQUEST['headerTitle']);
+		$headerSub = stripslashes($_REQUEST['headerSub']);
 		//$headerKeyWords = "list, of, keywords,";
-		$includeImages = stripslashes($_POST['includeImages']);
-		$runShortcodes = stripslashes($_POST["runShortcodes"]);
-		$runFilters = stripslashes($_POST["runFilters"]);
-		$convertYoutube = stripslashes($_POST["convertYoutube"]);
-		$convertVimeo = stripslashes($_POST["convertVimeo"]);
-		$convertTed = stripslashes($_POST["convertTed"]);
-		//$includeTables = stripslashes($_POST['includeTables']);
-		$autoPageBreak = stripslashes($_POST["autoPageBreak"]);
-		$includeTOC = stripslashes($_POST["includeTOC"]);
-		$fontSize = (int) $_POST['fontSize'];
+		
+		//booleans
+		$includeImages = ($_REQUEST['includeImages'] === "true");
+		$runShortcodes = ($_REQUEST["runShortcodes"] === "true");
+		$runFilters = ($_REQUEST["runFilters"] === "true");
+		$convertYoutube = ($_REQUEST["convertYoutube"] === "true");
+		$convertVimeo = ($_REQUEST["convertVimeo"] === "true");
+		$convertTed = ($_REQUEST["convertTed"] === "true");
+		//$includeTables = ($_REQUEST['includeTables'] === "true");
+		$autoPageBreak = ($_REQUEST["autoPageBreak"] === "true");
+		$includeTOC = ($_REQUEST["includeTOC"] === "true");
+		
+		$bCreatePDF = ($_REQUEST["bCreatePDF"] === "true");
+		$bCreateHTML = ($_REQUEST["bCreateHTML"] === "true");
+		$bCreateTXT = ($_REQUEST["bCreateTXT"] === "true");
+		
+		$fontSize = (int) $_REQUEST['fontSize'];
 		
 		$kalinsPDFToolOptions = array();//collect our passed in values so we can save them for next time
 			
 		$kalinsPDFToolOptions["headerTitle"] = $headerTitle;
 		$kalinsPDFToolOptions["headerSub"] = $headerSub;
-		$kalinsPDFToolOptions["filename"] = $_POST["fileNameCont"];
+		$kalinsPDFToolOptions["filename"] = $_REQUEST["filename"];
+		
+		//booleans
 		$kalinsPDFToolOptions["includeImages"] = $includeImages;
 		$kalinsPDFToolOptions["runShortcodes"] = $runShortcodes;
 		$kalinsPDFToolOptions["runFilters"] = $runFilters;
 		$kalinsPDFToolOptions["convertYoutube"] = $convertYoutube;
 		$kalinsPDFToolOptions["convertVimeo"] = $convertVimeo;
 		$kalinsPDFToolOptions["convertTed"] = $convertTed;
+		$kalinsPDFToolOptions["autoPageBreak"] = $autoPageBreak;
+		$kalinsPDFToolOptions["includeTOC"] = $includeTOC;
+		$kalinsPDFToolOptions["bCreatePDF"] = $bCreatePDF;
+		$kalinsPDFToolOptions["bCreateHTML"] = $bCreateHTML;
+		$kalinsPDFToolOptions["bCreateTXT"] = $bCreateTXT;
 		
-		//$convertVimeo
 		//$kalinsPDFToolOptions["includeTables"] = $includeTables;
 		$kalinsPDFToolOptions["beforePage"] = $beforePage;
 		$kalinsPDFToolOptions["beforePost"] = $beforePost;
@@ -148,22 +156,36 @@ if($isSingle){
 		$kalinsPDFToolOptions["titlePage"] = $titlePage;
 		$kalinsPDFToolOptions["finalPage"] = $finalPage;
 		$kalinsPDFToolOptions["fontSize"] = $fontSize;
-		$kalinsPDFToolOptions["autoPageBreak"] = $autoPageBreak;
-		$kalinsPDFToolOptions["includeTOC"] = $includeTOC;
-		
+				
 		update_option(KALINS_PDF_TOOL_OPTIONS_NAME, $kalinsPDFToolOptions);//save options to database
 	} catch (Exception $e) {
 		$outputVar->status = "problem setting options. Be sure the text you have entered is compatible or try resetting to defaults.";
-		echo json_encode($outputVar);
-	}	
+		die(json_encode($outputVar));
+	}
 	
-	if(file_exists($pdfDir .$fileName)){//if the file already exists, echo an error and quit
-		$outputVar->status = "file already exists.";
-		echo json_encode($outputVar);
-		return;
-	}else{
-		$outputVar->fileName = $fileName;
-		$outputVar->date = date("Y-m-d H:i:s", time());
+	$outputVar->aFiles = array();
+	function processFileType($fileType, $filename, $outputVar, $pdfDir){
+		if(file_exists($pdfDir .$filename .$fileType)){//if a file already exists, error and quit
+			$outputVar->status = $filename .$fileType ." already exists.";
+			die(json_encode($outputVar));
+		}
+		//add array of new filenames/dates to the result object
+		$newFileObj = new stdClass();
+		$newFileObj->fileName = $filename .$fileType;
+		$newFileObj->date = date("Y-m-d H:i:s", time());
+		array_push($outputVar->aFiles, $newFileObj);
+	}
+
+	if($bCreateHTML){
+		processFileType(".html", $filename, $outputVar, $pdfDir);
+	}
+
+	if($bCreatePDF){
+		processFileType(".pdf", $filename, $outputVar, $pdfDir);
+	}
+	
+	if($bCreateTXT){
+		processFileType(".txt", $filename, $outputVar, $pdfDir);
 	}
 }
 
@@ -183,8 +205,7 @@ try{
 	}
 } catch (Exception $e) {
 	$outputVar->status = "problem getting pages and posts.";
-	echo json_encode($outputVar);
-	return;
+	die(json_encode($outputVar));
 }
 
 try{
@@ -193,12 +214,23 @@ try{
 	// set document information
 	$objTcpdf->SetCreator(PDF_CREATOR);
 	
+	$theSubTitle = "";
+	$theTitle = "";
+	
 	if($isSingle){
-		$objTcpdf->SetTitle( kalins_pdf_page_shortcode_replace($headerTitle, $result[0]) );// set default header data
-		$objTcpdf->SetHeaderData(null, null, kalins_pdf_page_shortcode_replace($headerTitle, $result[0]), kalins_pdf_page_shortcode_replace($headerSub, $result[0]) );
+		$theTitle = htmlspecialchars_decode(kalins_pdf_page_shortcode_replace($headerTitle, $result[0]));
+		$theTitle = str_replace("&#039;", "'", $theTitle);//manually replace apostrophes (htmlspecialchars_decode didn't work for that one)
+		$theSubTitle = htmlspecialchars_decode(kalins_pdf_page_shortcode_replace($headerSub, $result[0]));
+		$theSubTitle = str_replace("&#039;", "'", $theSubTitle);
+		$objTcpdf->SetTitle( $theTitle );// set default header data
+		$objTcpdf->SetHeaderData(null, null, $theTitle, $theSubTitle);
 	}else{
-		$objTcpdf->SetTitle( kalins_pdf_global_shortcode_replace($headerTitle, $isSingle) );// set default header data
-		$objTcpdf->SetHeaderData(null, null, kalins_pdf_global_shortcode_replace($headerTitle), kalins_pdf_global_shortcode_replace($headerSub) );
+		$theTitle = htmlspecialchars_decode(kalins_pdf_global_shortcode_replace($headerTitle));
+		$theTitle = str_replace("&#039;", "'", $theTitle);//manually replace apostrophes
+		$theSubTitle = htmlspecialchars_decode(kalins_pdf_global_shortcode_replace($headerSub));
+		$theSubTitle = str_replace("&#039;", "'", $theSubTitle);
+		$objTcpdf->SetTitle( $theTitle );// set default header data
+		$objTcpdf->SetHeaderData(null, null, $theTitle, $theSubTitle );
 	}
 	// set header and footer fonts
 	$objTcpdf->setHeaderFont(Array('Times', '', PDF_FONT_SIZE_MAIN));
@@ -218,7 +250,6 @@ try{
 	//$lg['a_meta_dir'] = 'rtl';
 	//$lg['a_meta_language'] = 'fa';
 	
-	
 	/* to translate or otherwise change the word 'page', add the following code into your wp-config.php file. This will retain the setting even as I upgrade the plugin.
 	
 	define("KALINS_PDF_PAGE_TRANSLATION", "page translation string");
@@ -227,25 +258,33 @@ try{
 	
 	if(defined("KALINS_PDF_PAGE_TRANSLATION")){//if someone defined a new 'page' translation in wp-config, set its value
 		$l['w_page'] = KALINS_PDF_PAGE_TRANSLATION;
+		$objTcpdf->setLanguageArray($l);
 	}
-	
-	$objTcpdf->setLanguageArray($l); 
 	
 	//initialize document
 	$objTcpdf->getAliasNbPages();
 
 } catch (Exception $e) {
 	$outputVar->status = "problem setting TCPDF options. Double check header titles and font size";
-	echo json_encode($outputVar);
-	return;
+	die(json_encode($outputVar));
 }
 
 $objTcpdf->SetFont( 'Times', '', $fontSize );
 
+$totalHTML = '<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>' .kalins_pdf_global_shortcode_replace($headerTitle) .'</title>
+  <meta name="description" content="' .kalins_pdf_global_shortcode_replace($headerSub) .'">
+</head>
+<body>';
+
+$totalTXT = '';
+
 try{
 	if($titlePage != ""){
 		$objTcpdf->AddPage();//create title page and start off our PDF file
-		//$objTcpdf->SetFont( PDF_FONT_NAME_MAIN, '', $fontSize );
 		if($isSingle){
 			$titlePage = kalins_pdf_page_shortcode_replace($titlePage, $result[0]);
 		}else{
@@ -254,14 +293,16 @@ try{
 		$strHtml = wpautop($titlePage, true );
 		$objTcpdf->writeHTML( $strHtml , true, 0, true, 0);
 		
+		$totalHTML = $totalHTML .$strHtml;
+		$totalTXT = $totalTXT .$titlePage;
+		
 		if($autoPageBreak != "true" && $includeTOC == "true"){//if we don't page-break between posts AND we're including table of contents, we need to break after the title page so TOC can be on second page
 			$objTcpdf->AddPage();
 		}
 	}
 } catch (Exception $e) {
 	$outputVar->status = "problem creating title page.";
-	echo json_encode($outputVar);
-	return;
+	die(json_encode($outputVar));
 }
 
 //global $proBar;
@@ -279,9 +320,7 @@ try{
 		}
 		
 		$objPost = $result[$i];
-		
-		//global $post;
-		
+				
 		$content = $objPost->post_content;
 		
 		$post = $objPost;//set global post object so if other plugins run their shortcodes they'll have access to it. Not sure why query_posts doesn't take care of this
@@ -351,13 +390,10 @@ try{
 			$objTcpdf->Bookmark($objPost->post_title, 0, 0);
 			//$objTcpdf->Cell(0, 10, '', 0, 1, 'L');
 		}
-		
-		// set font
-		//$objTcpdf->SetFont( PDF_FONT_NAME_MAIN, '', $fontSize );
-		
-		//$content = apply_filters('the_content', $content);
 	
 		$strHtml = wpautop($content, true );
+		$totalHTML = $totalHTML .$strHtml;
+		$totalTXT = $totalTXT .$content;
 		
 		// output the HTML content
 		$objTcpdf->writeHTML( $strHtml , true, 0, true, 0);
@@ -367,15 +403,13 @@ try{
 	
 } catch (Exception $e) {
 	$outputVar->status = "problem creating pages and posts. Perhaps there's a problem with one of the pages you've selected or with the before or after HTML.";
-	echo json_encode($outputVar);
-	return;
+	die(json_encode($outputVar));
 }
 
 try{
 	if($finalPage != ""){
 		$objTcpdf->AddPage();//create final page in pdf
 		$objTcpdf->SetFont( PDF_FONT_NAME_MAIN, '', $fontSize );
-		//$finalPage = kalins_pdf_global_shortcode_replace($finalPage, $isSingle);
 		
 		if($isSingle){
 			$finalPage = kalins_pdf_page_shortcode_replace($finalPage, $result[0]);
@@ -384,12 +418,14 @@ try{
 		}
 		
 		$strHtml = wpautop($finalPage, true );
+		$totalHTML = $totalHTML .$strHtml;
+		$totalTXT = $totalTXT .$finalPage;
+				
 		$objTcpdf->writeHTML( $strHtml , true, 0, true, 0);
 	}
 } catch (Exception $e) {
 	$outputVar->status = "problem creating final page.";
-	echo json_encode($outputVar);
-	return;
+	die(json_encode($outputVar));
 }
 
 try{
@@ -414,24 +450,38 @@ try{
 		$objTcpdf->endTOCPage();
 	}
 	
+	//create and save the proper document(s)
+	if($isSingle){
+		$objTcpdf->Output( $pdfDir .$filename .".pdf", 'F' );
+	}	else {
+		if( $bCreatePDF){
+			$objTcpdf->Output( $pdfDir .$filename .".pdf", 'F' );
+		}
+		
+		if($bCreateHTML){
+			$totalHTML = $totalHTML .'</body>
+	</html>';
+			file_put_contents ( $pdfDir .$filename .".html" , $totalHTML );
+		}
+		
+		if($bCreateTXT){
+			file_put_contents ( $pdfDir .$filename .".txt" , $totalTXT );
+		}
+	}
 	
-	
-	
-	//create and save the PDF document
-	$objTcpdf->Output( $pdfDir .$fileName, 'F' );
 } catch (Exception $e) {
 	$outputVar->status = "problem outputting the final PDF file.";
-	echo json_encode($outputVar);
-	return;
+	die(json_encode($outputVar));
 }
 
 $outputVar->status = "success";//set success status for output to AJAX
 
 if(!isset($skipReturn)){
 	if($isSingle){//if this is called from a page/post we redirect so that user can download pdf directly
-		header("Location: " .$pdfURL .$fileName);
+		header("Location: " .$pdfURL .$filename .".pdf");
+		die();
 	}else{
-		echo json_encode($outputVar);//if it's called from the creation station admin panel we output the result object to AJAX
+		die(json_encode($outputVar));//if it's called from the creation station admin panel we output the result object to AJAX
 	}
 }
 
