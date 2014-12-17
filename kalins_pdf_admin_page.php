@@ -11,9 +11,9 @@
 	$reset_nonce = wp_create_nonce( 'kalins_pdf_admin_reset' );
 	$create_nonce = wp_create_nonce( 'kalins_pdf_create_all' );
 	
-	$adminOptions = kalins_pdf_get_admin_options();
+	$adminOptions = kalins_pdf_get_options(KALINS_PDF_ADMIN_OPTIONS_NAME);
 	
-	$adminStrings = file_get_contents(WP_PLUGIN_DIR . '/kalins-pdf-creation-station/adminStrings.json');
+	$adminStrings = file_get_contents(WP_PLUGIN_DIR . '/kalins-pdf-creation-station/help/adminStrings.json');
 ?>
 
 
@@ -42,11 +42,10 @@ app.controller("InputController",["$scope", "$http", "kalinsToggles", "kalinsAle
 
 	self.saveData = function(){
 		//copy our data into new object
-		var data = JSON.parse( JSON.stringify( self.oOptions ) );
-		data.action = 'kalins_pdf_admin_save';//tell wordpress what to call
-		data._ajax_nonce = saveNonce;//authorize it
+		var data = {};
+		data.oOptions = self.oOptions;
 
-		$http({method:"POST", url:ajaxurl, params: data}).
+		$http({method:"POST", url:ajaxurl, params: {action:'kalins_pdf_admin_save', _ajax_nonce:saveNonce },  data:data}).
 		  success(function(data, status, headers, config) {				
 				if(data === "success"){
 					$scope.kalinsAlertManager.addAlert("Settings saved successfully.", "success");
@@ -61,9 +60,8 @@ app.controller("InputController",["$scope", "$http", "kalinsToggles", "kalinsAle
 
 	self.resetToDefaults = function(){
 		if(confirm("Are you sure you want to reset all of your field values? You will lose all the information you have entered and your cache of PDF files will be cleared.")){
-			var data = { action: 'kalins_pdf_reset_admin_defaults', _ajax_nonce : resetNonce};
 
-			$http({method:"POST", url:ajaxurl, params: data}).
+			$http({method:"POST", url:ajaxurl, params: {action:'kalins_pdf_reset_admin_defaults', _ajax_nonce:resetNonce }}).
 			  success(function(data, status, headers, config) {
 				  self.oOptions = data;
 				  $scope.kalinsAlertManager.addAlert("Defaults reset successfully.", "success");
@@ -77,15 +75,11 @@ app.controller("InputController",["$scope", "$http", "kalinsToggles", "kalinsAle
 	self.createAll = function(){
 		var creationInProcess = false;
 		
-		var data = { action: 'kalins_pdf_create_all',
-			_ajax_nonce : createAllNonce
-		}
-		
 		if(!creationInProcess){
 			$scope.kalinsAlertManager.addAlert("Creating PDF files for all pages and posts.", "success");
 		}
 
-		$http({method:"POST", url:ajaxurl, params: data}).
+		$http({method:"POST", url:ajaxurl, params: {action:'kalins_pdf_create_all', _ajax_nonce:createAllNonce }}).
 		  success(function(data, status, headers, config) {
 				if(data.status == "success"){
 					if(data.existCount >= data.totalCount){
@@ -111,6 +105,7 @@ app.controller("InputController",["$scope", "$http", "kalinsToggles", "kalinsAle
 		<h2>PDF Creation Station</h2>
 		<h3>by Kalin Ringkvist - <a href="http://kalinbooks.com/">kalinbooks.com</a></h3>
 		<p>Settings for creating PDF files on individual pages and posts. For more information, click the help tab to the upper right.</p>
+		<p><a href="http://kalinbooks.com/pdf-creation-station/">Plugin page</a> | <a href="http://kalinbooks.com/pdf-creation-station/known-bugs/">Report bug</a></p>
 		
 		<p><a href="#" ng-click="showVideo = !showVideo">Watch a tutorial video</a></p>
 		<div class="text-center" ng-show="showVideo">

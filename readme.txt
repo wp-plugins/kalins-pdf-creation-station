@@ -14,7 +14,7 @@ Build highly customizable PDF documents from any combination of pages and posts,
 <p>
 Kalin's PDF Creation Station will add two menus to your WordPress admin. One under tools and one under settings. 
 </p>
-<p>In the tools menu you will be able to build PDF (or .html and .txt) documents from any combination of pages and posts. Select any or all pages and posts from your site, then add a custom title page, end page and custom headers. Adjust font sizes, file names, or insert information such as timestamps, excerpts and urls through the use of shortcodes. All created PDF files will display in a convenient list for you to delete, download or link to.
+<p>In the tools menu you will be able to build PDF (or .html and .txt) documents from any combination of pages and posts. Select any or all pages and posts from your site, then add a custom title page, end page and custom headers. Adjust font sizes, file names, or insert information such as timestamps, excerpts and urls through the use of shortcodes. Save your document as a template for future use or create your PDF, TXT or HTML documents. All created files will display in a convenient list for you to delete, download or link to.
 </p>
 <p>
 In the settings menu you will be able to setup options for a link that can be automatically added to some or all pages and posts. This link will point to an automatically generated PDF version of that page. Most of the same customization options are available here that are available in the creation tool, like title page and font size, as well as the option to fully customize the link itself. On individual page/post edit pages you will be able to override the default link placement so you can show links on some pages and not on others. PDF files are saved to your server so they only need to be created once, reducing server load compared to other PDF generation plugins that create a new PDF every time the link is clicked. The PDF file is automatically deleted when a page or post is edited, so the PDF always matches the page.
@@ -33,7 +33,7 @@ Future features: http://kalinbooks.com/pdf-creation-station/pdf-creation-possibl
 </p>
 
 <p>
-Tools page demo:
+Tools page demo (note this is for 4.0, so it's missing the new template saving feature):
 [youtube http://www.youtube.com/watch?v=zLHpr-8aYVw]
 </p>
 
@@ -147,6 +147,7 @@ removed testing alerts
 = 4.0 =
 *Migrated front-end into AngularJS and Bootstrap, away from jQuery.
 *Improved appearance of user interface for both tool and settings pages.
+*UI should now function much better on mobile devices.
 *Added dynamic sorting and filtering to help you find the correct page or post on the tools page.
 *Sorting of pages in document on tool page has been improved.
 *Added same dynamic sorting and filtering to the list of created documents.
@@ -155,6 +156,14 @@ removed testing alerts
 *Added a box in the menu section to allow you to easily link to your files created in the tool page.
 *Fixed a minor bug with apostrophes in the filename on the tool page.
 
+= 4.1 =
+*Added the ability to save documents on the tool page as templates for future use. Includes your selected pages.
+*Added tags and categories to the pages and posts datagrid on the tool page.
+*Cleaned up backend handling of AJAX calls, so there is no longer a maximum input length for your options. Should hopefully be less prone to errors.
+*Divided contextual help menus on settings and tool pages into two tabs.
+*Upgraded the TCPDF library from 6.0.061 to 6.0.099. I think this fixed an issue with transparency in .png images.
+*YouTube, Vimeo and Ted video link conversion now works with the standard WordPress embed.
+*YouTube, Vimeo and Ted video link conversion should now work with single quotes and urls without the 'www'.
 
 == Upgrade Notice ==
 
@@ -202,6 +211,9 @@ After all this time, finally releasing a small update. Should work a little fast
 
 = 4.0 =
 Major user interface redesign. Improved page/post sorting on the tool page. Added custom menu and widget support. Added .txt and .html creation ability.
+
+= 4.1 =
+Added ability to save templates for future use. Also: code cleanup; updated TCPDF library; improved YouTube, Vimeo and Ted Talk link conversions, added categories and tags to tool's post list.
 
 == About ==
 
