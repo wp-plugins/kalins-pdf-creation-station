@@ -33,8 +33,8 @@ Future features: http://kalinbooks.com/pdf-creation-station/pdf-creation-possibl
 </p>
 
 <p>
-Tools page demo (note this is for 4.0, so it's missing the new template saving feature):
-[youtube http://www.youtube.com/watch?v=zLHpr-8aYVw]
+Tools page demo:
+[youtube http://www.youtube.com/watch?v=cPaz3X4RXbQ]
 </p>
 
 <p>
